@@ -18,6 +18,17 @@
     <preference name="AndroidPersistentFileLocation" value="Internal" />
     <preference name="AndroidXEnabled" value="true" />
 
+    <!-- Storage Permissions Required for File Export and Folder Saving -->
+    <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:requestLegacyExternalStorage="true" />
+        </edit-config>
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+        </config-file>
+    </platform>
+
     <plugin name="cordova-plugin-file" spec="^8.0.0" />
     <plugin name="cordova-plugin-geolocation" spec="^5.0.0" />
 </widget>
