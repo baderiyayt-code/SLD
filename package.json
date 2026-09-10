@@ -1,7 +1,7 @@
 {
   "name": "in.discom.feeder.survey",
   "displayName": "DISCOM Survey Pro",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Offline Survey App with Sync, Search & GPS Interval",
   "main": "index.js",
   "scripts": {
