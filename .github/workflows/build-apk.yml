@@ -9,6 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,20 +23,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android Licenses & Install SDK 34
+      - name: Setup Android SDK 33 Components & Licenses
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
 
       - name: Install Compatible Gradle (8.2.1)
         run: |
           sudo rm -rf /usr/share/gradle*
+          sudo rm -f /usr/bin/gradle /usr/local/bin/gradle
           wget -q https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
-          sudo unzip -q -d /opt gradle-8.2.1-bin.zip
-          echo "/opt/gradle-8.2.1/bin" >> $GITHUB_PATH
+          sudo unzip -q -o gradle-8.2.1-bin.zip -d /opt
+          sudo ln -s /opt/gradle-8.2.1/bin/gradle /usr/local/bin/gradle
 
       - name: Setup Node.js 18
         uses: actions/setup-node@v4
