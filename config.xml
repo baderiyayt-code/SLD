@@ -1,42 +1,28 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="in.discom.feeder.survey" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="in.discom.feeder.survey" version="1.0.0" xmlns="http://www.w3.org/ns/widgets">
     <name>DISCOM Survey</name>
     <description>DISCOM Feeder Survey Pro Enterprise Edition</description>
     <author email="survey@discom.in">DISCOM Survey Team</author>
 
     <content src="index.html" />
-    
+
     <access origin="*" />
     <allow-navigation href="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
-    <allow-intent href="tel:*" />
-    <allow-intent href="sms:*" />
-    <allow-intent href="mailto:*" />
-    <allow-intent href="geo:*" />
 
-    <!-- Android Preferences -->
     <preference name="ScrollEnabled" value="false" />
     <preference name="android-minSdkVersion" value="22" />
     <preference name="android-targetSdkVersion" value="34" />
-    <preference name="KeepRunning" value="true" />
-    <preference name="ShowSplashScreenSpinner" value="false" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
 
-    <!-- Permanent File Storage Plugin -->
     <plugin name="cordova-plugin-file" spec="^8.0.0" />
-
-    <!-- High Accuracy GPS Plugin -->
     <plugin name="cordova-plugin-geolocation" spec="^5.0.0" />
-
-    <!-- Whitelist & Webview Plugins -->
-    <plugin name="cordova-plugin-whitelist" spec="^1.3.5" />
-    <plugin name="cordova-plugin-androidx-adapter" spec="^1.1.3" />
 
     <platform name="android">
         <config-file target="AndroidManifest.xml" parent="/*">
             <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
             <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-            <uses-feature android:name="android.hardware.location.gps" />
         </config-file>
     </platform>
 </widget>
