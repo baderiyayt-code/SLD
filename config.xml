@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="in.discom.feeder.survey" version="2.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="in.discom.feeder.survey" version="3.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>DISCOM Survey Pro</name>
     <description>DISCOM Feeder Survey Offline App with Smart Sync</description>
     <author email="it@discom.in">DISCOM IT Team</author>
+    
     <content src="index.html" />
     
     <access origin="*" />
@@ -12,10 +13,23 @@
 
     <preference name="android-minSdkVersion" value="22" />
     <preference name="android-targetSdkVersion" value="33" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
 
-    <!-- Storage & Network Plugins -->
+    <!-- Storage Permissions Request Via Config -->
+    <platform name="android">
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:requestLegacyExternalStorage="true" />
+        </edit-config>
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+        </config-file>
+    </platform>
+
+    <!-- Essential Plugins -->
     <plugin name="cordova-plugin-file" spec="^8.0.0" />
     <plugin name="cordova-plugin-geolocation" spec="^5.0.0" />
-    <plugin name="cordova-plugin-network-information" spec="^3.0.0" /> <!-- For Auto Sync -->
-    <plugin name="cordova-sqlite-storage" spec="^6.0.0" /> <!-- Advanced DB -->
+    <plugin name="cordova-plugin-network-information" spec="^3.0.0" />
+    <plugin name="cordova-sqlite-storage" spec="^6.0.0" />
 </widget>
