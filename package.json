@@ -1,22 +1,24 @@
 {
   "name": "in.discom.feeder.survey",
-  "displayName": "DISCOM Survey",
-  "version": "1.0.0",
-  "description": "DISCOM Feeder Survey Pro Offline Mobile App",
+  "displayName": "DISCOM Survey Pro",
+  "version": "2.0.0",
+  "description": "Offline Survey App with Sync, Search & GPS Interval",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "cordova build android --release"
   },
-  "author": "DISCOM",
-  "license": "Apache-2.0",
   "dependencies": {
     "cordova-plugin-file": "^8.0.0",
-    "cordova-plugin-geolocation": "^5.0.0"
+    "cordova-plugin-geolocation": "^5.0.0",
+    "cordova-plugin-network-information": "^3.0.0",
+    "cordova-sqlite-storage": "^6.0.0"
   },
   "cordova": {
     "plugins": {
       "cordova-plugin-file": {},
-      "cordova-plugin-geolocation": {}
+      "cordova-plugin-geolocation": {},
+      "cordova-plugin-network-information": {},
+      "cordova-sqlite-storage": {}
     }
   }
 }
