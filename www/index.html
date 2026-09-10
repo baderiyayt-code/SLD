@@ -418,8 +418,7 @@
             checkOrphanNode: true,
             locationAccuracy: 'high',
             unitOfDistance: 'meter',
-            language: 'hi',
-            exportPath: 'DOWNLOADS' // Options: 'DOWNLOADS', 'APP_DOCUMENTS', 'BROWSER_SHARE'
+            exportPath: 'DOWNLOADS' 
         },
         user: { isLoggedIn: true, name: "Field Surveyor", email: "", subdiv: "Division Office" },
         filters: { lines33: true, lines11: true, linesLT: true, poles: true, dts: true, consumers: true },
@@ -808,10 +807,24 @@
 
             // 5. CONSUMERS
             if (showConsumers) {
+                const poleConsumerCounts = {}; 
+                
                 net.consumers.forEach(c => {
                     const pole = net.poles.find(p => p.poleNo === c.poleNo);
+                    
+                    // Consumer offset Logic applied dynamically if coords are missing
                     if (!c.lat || !c.lng) {
-                        if (pole) { c.lat = pole.lat - 0.00012; c.lng = pole.lng + 0.00012; }
+                        if (pole) {
+                            poleConsumerCounts[c.poleNo] = (poleConsumerCounts[c.poleNo] || 0);
+                            const count = poleConsumerCounts[c.poleNo]++;
+                            
+                            // Circular distribution math to prevent overlapping
+                            const radius = 0.00015 + (Math.floor(count / 6) * 0.0001);
+                            const angle = count * (Math.PI / 3); // 60 degrees offset each
+                            
+                            c.lat = pole.lat + (radius * Math.sin(angle));
+                            c.lng = pole.lng + (radius * Math.cos(angle));
+                        }
                     }
                     if (!c.lat || !c.lng) return;
 
@@ -1101,11 +1114,29 @@
         net.dts.push({ id: 'DT_' + Date.now(), poleNo, code, phase, rating, location: '', lat: p.lat, lng: p.lng });
         closeModal(); renderEntireNetwork(); triggerPersistence(); showToast(`DT माउंट किया गया!`);
     }
+
+    /* === CONSUMERS ALGORITHM - FIXED OVERLAPPING === */
     function saveNewConsumer() {
         const poleNo = document.getElementById('inpConsPole').value, kno = document.getElementById('inpConsKno').value.trim(), name = document.getElementById('inpConsName').value.trim(), load = document.getElementById('inpConsLoad').value.trim();
         const net = getActiveNetwork(); const p = net.poles.find(x => x.poleNo === poleNo);
         if (!name || !p) return alert('नाम आवश्यक है');
-        net.consumers.push({ id: 'CS_' + Date.now(), poleNo, kno, name, load, lat: p.lat - 0.00012, lng: p.lng + 0.00012 });
+        
+        // Find existing consumers on this pole to prevent overlapping
+        const existingCount = net.consumers.filter(c => c.poleNo === poleNo).length;
+        
+        // Dynamic circular coordinate distribution
+        const radius = 0.00015 + (Math.floor(existingCount / 6) * 0.0001);
+        const angle = existingCount * (Math.PI / 3);
+        const latOffset = radius * Math.sin(angle);
+        const lngOffset = radius * Math.cos(angle);
+        
+        net.consumers.push({ 
+            id: 'CS_' + Date.now(), 
+            poleNo, kno, name, load, 
+            lat: p.lat + latOffset, 
+            lng: p.lng + lngOffset 
+        });
+        
         closeModal(); renderEntireNetwork(); triggerPersistence(); showToast(`उपभोक्ता सुरक्षित!`);
     }
 
@@ -1241,7 +1272,7 @@
     }
 
     /* =================================================================
-       9. EXPORT & FILE PATH SAVING ENGINE
+       9. EXPORT ENGINE - FIXED TRUNCATE/REPLACE & STORAGE PERMISSIONS
        ================================================================= */
     function downloadOrSaveExportFile(filename, dataBlobOrText, mimeType) {
         const pathChoice = appState.settings.exportPath || 'DOWNLOADS';
@@ -1249,38 +1280,58 @@
 
         if (isCordova && pathChoice !== 'BROWSER_SHARE') {
             let targetDir = cordova.file.dataDirectory;
-            let displayFolderName = "App Storage";
+            let displayFolderName = "App Private Storage /";
 
-            if (pathChoice === 'DOWNLOADS' && cordova.file.externalRootDirectory) {
-                targetDir = cordova.file.externalRootDirectory + 'Download/';
-                displayFolderName = "Download/";
-            } else if (pathChoice === 'DOWNLOADS' && cordova.file.externalDataDirectory) {
-                targetDir = cordova.file.externalDataDirectory;
-                displayFolderName = "Android External App Storage";
+            if (pathChoice === 'DOWNLOADS') {
+                if (cordova.file.externalRootDirectory) {
+                    targetDir = cordova.file.externalRootDirectory + 'Download/';
+                    displayFolderName = "Download/";
+                }
             }
 
-            window.resolveLocalFileSystemURL(targetDir, function (dirEntry) {
-                dirEntry.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
-                    fileEntry.createWriter(function (fileWriter) {
-                        fileWriter.onwriteend = function () {
-                            alert(`✅ फ़ाइल सफलतापूर्वक सुरक्षित हो गई!\n\nस्थान:\n${displayFolderName}${filename}`);
-                            showToast(`एक्सपोर्ट सफल: ${filename}`);
-                        };
-                        fileWriter.onerror = function (e) {
-                            console.error("Write error", e);
-                            fallbackWebDownload(filename, dataBlobOrText, mimeType);
-                        };
-                        const blob = (dataBlobOrText instanceof Blob) ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
-                        fileWriter.write(blob);
+            const tryWrite = (dirUrl, dName, failCallback) => {
+                window.resolveLocalFileSystemURL(dirUrl, function (dirEntry) {
+                    dirEntry.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
+                        fileEntry.createWriter(function (fileWriter) {
+                            
+                            // On truncate finish, trigger blob write
+                            fileWriter.onwriteend = function () {
+                                if (fileWriter.length === 0) {
+                                    const blob = (dataBlobOrText instanceof Blob) ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
+                                    
+                                    fileWriter.onwriteend = function() {
+                                        alert(`✅ फ़ाइल सफलतापूर्वक सुरक्षित (Replace) हो गई!\n\nस्थान:\n${dName}${filename}`);
+                                        showToast(`एक्सपोर्ट सफल: ${filename}`);
+                                    };
+                                    fileWriter.write(blob); // Write new replaced blob
+                                }
+                            };
+                            
+                            fileWriter.onerror = function (e) {
+                                console.error("Write error in " + dName, e);
+                                failCallback();
+                            };
+                            
+                            // To ensure proper replace if file exists, truncate size to 0 first
+                            fileWriter.truncate(0); 
+                            
+                        });
+                    }, function (err) { failCallback(); });
+                }, function (err) { failCallback(); });
+            };
+
+            // Attempt 1: Targeted Directroy
+            tryWrite(targetDir, displayFolderName, () => {
+                // Fallback attempt (External App Data - does not require explicit permissions)
+                if (cordova.file.externalDataDirectory && targetDir !== cordova.file.externalDataDirectory) {
+                    tryWrite(cordova.file.externalDataDirectory, "Android/data/in.discom.feeder.survey/files/", () => {
+                        fallbackWebDownload(filename, dataBlobOrText, mimeType);
                     });
-                }, function (err) {
-                    console.error("getFile error", err);
+                } else {
                     fallbackWebDownload(filename, dataBlobOrText, mimeType);
-                });
-            }, function (err) {
-                console.error("resolveLocalFileSystemURL error", err);
-                fallbackWebDownload(filename, dataBlobOrText, mimeType);
+                }
             });
+            
         } else {
             fallbackWebDownload(filename, dataBlobOrText, mimeType);
         }
@@ -1568,10 +1619,19 @@
                         if (p) { d.lat = p.lat; d.lng = p.lng; }
                     }
                 });
+                
+                const importPoleConsumerCounts = {};
                 net.consumers.forEach(c => {
                     if (!c.lat || !c.lng) {
                         const p = net.poles.find(x => x.poleNo === c.poleNo);
-                        if (p) { c.lat = p.lat - 0.00012; c.lng = p.lng + 0.00012; }
+                        if (p) {
+                            importPoleConsumerCounts[c.poleNo] = (importPoleConsumerCounts[c.poleNo] || 0);
+                            const count = importPoleConsumerCounts[c.poleNo]++;
+                            const radius = 0.00015 + (Math.floor(count / 6) * 0.0001);
+                            const angle = count * (Math.PI / 3);
+                            c.lat = p.lat + (radius * Math.sin(angle));
+                            c.lng = p.lng + (radius * Math.cos(angle));
+                        }
                     }
                 });
 
