@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2563eb">
     <title>DISCOM Feeder Survey Pro - Enterprise Edition</title>
 
-    <!-- Cordova Script (VoltBuilder / Android APK Ready) -->
+    <!-- Cordova Script for Mobile Builds -->
     <script src="cordova.js"></script>
 
     <!-- Leaflet & Icon Libraries -->
@@ -145,7 +145,7 @@
         .accordion-arrow { transition: transform 0.25s ease; font-size: 0.75rem; color: var(--text-sub); }
         .accordion-arrow.open { transform: rotate(180deg); }
         .accordion-body { max-height: 0; overflow: hidden; transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1); background: #ffffff; border-top: 1px solid transparent; }
-        .accordion-body.open { max-height: 300px; border-top-color: var(--border); padding-bottom:10px; }
+        .accordion-body.open { max-height: 380px; border-top-color: var(--border); padding-bottom:10px; }
         .accordion-sub-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; font-size: 0.8rem; font-weight: 600; color: var(--text-main); cursor: pointer; border-bottom: 1px solid #f1f5f9; }
         .accordion-sub-item:last-child { border-bottom: none; }
         .accordion-sub-item:active { background: #f8fafc; }
@@ -250,17 +250,22 @@
 <div id="settings-page">
     <div class="settings-header">
         <button class="action-btn-sm" onclick="closeSettingsPage()"><i class="fa-solid fa-arrow-left"></i></button>
-        <h2 style="font-size:1.1rem; font-weight:800; color:var(--text-main);">सेटिंग्स एवं भाषा</h2>
+        <h2 style="font-size:1.1rem; font-weight:800; color:var(--text-main);">सेटिंग्स एवं स्टोरेज</h2>
     </div>
     <div class="settings-body">
         
+        <!-- EXPORT FILE PATH SELECTOR CARD -->
         <div class="settings-card" style="border: 1px solid #2563eb; background: #eff6ff;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-shield-halved" style="color:#2563eb; font-size:1.2rem;"></i>
-                <div>
-                    <b style="color:#1e40af;">परमानेंट डेटा स्टोरेज सक्रिय</b>
-                    <p style="font-size:0.72rem; color:#1e3a8a; margin-top:2px;">डेटा मोबाइल की इंटरनल मेमोरी (Private File Storage) में सुरक्षित है।</p>
-                </div>
+            <div class="form-row" style="margin-bottom:0;">
+                <label style="color:#1d4ed8;"><i class="fa-solid fa-folder-tree"></i> एक्सपोर्ट फ़ाइल पाथ (Export File Path)*</label>
+                <select id="setExportPath" class="form-select" onchange="updateExportPathPreference(this.value)">
+                    <option value="DOWNLOADS" selected>📁 Android Downloads Folder (Download/)</option>
+                    <option value="APP_DOCUMENTS">🔒 App Documents Storage (Private)</option>
+                    <option value="BROWSER_SHARE">🌐 Browser Direct Download / Share</option>
+                </select>
+                <p id="exportPathHint" style="font-size:0.72rem; color:#1e40af; margin-top:6px; font-weight:600;">
+                    फ़ाइलें डिवाइस के मुख्य "Download" फ़ोल्डर में सेव होंगी।
+                </p>
             </div>
         </div>
 
@@ -315,7 +320,7 @@
             <div class="user-avatar-badge"><i class="fa-solid fa-user"></i></div>
             <div>
                 <h4 id="userNameDisplay" style="font-size:0.9rem;">सर्वेयर (Surveyor)</h4>
-                <p id="userSubdivDisplay" style="font-size:0.7rem; color:var(--text-sub);">Division Office</p>
+                <p id="userSubdivDisplay" style="font-size:0.7rem; color:var(--text-sub);">DISCOM Division Office</p>
             </div>
         </div>
     </div>
@@ -355,6 +360,10 @@
                     <i class="fa-solid fa-file-csv" style="color:#ea580c;"></i>
                     <span>Export as CSV (All Data)</span>
                 </div>
+                <div class="accordion-sub-item" style="background:#f1f5f9; color:#2563eb;" onclick="openExportPathModal()">
+                    <i class="fa-solid fa-folder-gear" style="color:#2563eb;"></i>
+                    <span>एक्सपोर्ट पाथ चुनें (Change Path)</span>
+                </div>
             </div>
         </div>
 
@@ -369,13 +378,13 @@
             <div class="accordion-body" id="importBody">
                 <label class="accordion-sub-item">
                     <i class="fa-solid fa-file-csv" style="color:#ea580c;"></i>
-                    <span>Import CSV File</span>
-                    <input type="file" accept=".csv" style="display:none;" onchange="handleUnifiedImport(event)">
+                    <span>Import CSV File (ठीक किया हुआ)</span>
+                    <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;" onchange="handleCSVImport(event)">
                 </label>
                 <label class="accordion-sub-item">
                     <i class="fa-solid fa-file-code" style="color:#8b5cf6;"></i>
                     <span>Import JSON Backup</span>
-                    <input type="file" accept=".json" style="display:none;" onchange="handleUnifiedImport(event)">
+                    <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none;" onchange="handleJSONImport(event)">
                 </label>
             </div>
         </div>
@@ -383,7 +392,7 @@
         <div class="menu-category-title">सिस्टम एवं टूल्स</div>
         <div class="menu-link-btn" onclick="openSettingsPage()">
             <i class="fa-solid fa-gear" style="color:#2563eb;"></i>
-            <span>सेटिंग्स (Settings & Reset)</span>
+            <span>सेटिंग्स (Settings & Storage)</span>
         </div>
     </div>
 </div>
@@ -405,7 +414,13 @@
     const STORAGE_FILE = "discom_feeder_survey_data.json";
 
     const appState = {
-        settings: { checkOrphanNode: true, locationAccuracy: 'high', unitOfDistance: 'meter', language: 'hi' },
+        settings: {
+            checkOrphanNode: true,
+            locationAccuracy: 'high',
+            unitOfDistance: 'meter',
+            language: 'hi',
+            exportPath: 'DOWNLOADS' // Options: 'DOWNLOADS', 'APP_DOCUMENTS', 'BROWSER_SHARE'
+        },
         user: { isLoggedIn: true, name: "Field Surveyor", email: "", subdiv: "Division Office" },
         filters: { lines33: true, lines11: true, linesLT: true, poles: true, dts: true, consumers: true },
         currentFeederCode: "FDR-01",
@@ -442,7 +457,6 @@
         setTimeout(() => toast.classList.remove('show'), 2400);
     }
 
-    // Permanent File Save Routine (Cordova-Plugin-File)
     function triggerPersistence() {
         const payload = JSON.stringify({
             feeders: appState.feeders,
@@ -451,10 +465,8 @@
             user: appState.user
         });
 
-        // Always update localStorage as immediate fallback
         try { localStorage.setItem("DISCOM_SURVEY_CLEAN_DATA", payload); } catch(e) {}
 
-        // Save to internal app disk memory (Immune to Cache Clear / Browser Storage limits)
         if (window.cordova && cordova.file && cordova.file.dataDirectory) {
             window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function (dirEntry) {
                 dirEntry.getFile(STORAGE_FILE, { create: true, exclusive: false }, function (fileEntry) {
@@ -467,7 +479,6 @@
         }
     }
 
-    // Permanent File Load Routine
     function loadPersistedData(callback) {
         if (window.cordova && cordova.file && cordova.file.dataDirectory) {
             window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function (dirEntry) {
@@ -551,7 +562,13 @@
         if (overlay) overlay.classList.remove('open');
     }
 
-    function openSettingsPage() { toggleSidebar(false); document.getElementById('settings-page')?.classList.add('open'); }
+    function openSettingsPage() { 
+        toggleSidebar(false); 
+        const sel = document.getElementById('setExportPath');
+        if (sel) sel.value = appState.settings.exportPath || 'DOWNLOADS';
+        updateExportPathHint();
+        document.getElementById('settings-page')?.classList.add('open'); 
+    }
     function closeSettingsPage() { document.getElementById('settings-page')?.classList.remove('open'); }
 
     function switchFeeder(code) {
@@ -697,7 +714,16 @@
             // 2. LINES
             const spanBuckets = {};
             net.lines.forEach(line => {
-                if (!line.coords || line.coords.length < 2) return;
+                if (!line.coords || line.coords.length < 2) {
+                    const c1 = getNodeCoords(line.fromNode);
+                    const c2 = getNodeCoords(line.toNode);
+                    if (c1 && c2) {
+                        line.coords = [[c1.lat, c1.lng], [c2.lat, c2.lng]];
+                        line.distanceMeters = calcDistance(c1.lat, c1.lng, c2.lat, c2.lng);
+                    } else {
+                        return;
+                    }
+                }
                 const spec = getLineSpec(line.type);
                 if (!f[spec.filterKey]) return;
                 const spanKey = [line.fromNode, line.toNode].sort().join('<-->');
@@ -756,6 +782,12 @@
             // 4. DT TRANSFORMERS
             if (f.dts && showDTs) {
                 net.dts.forEach(d => {
+                    if (!d.lat || !d.lng) {
+                        const p = net.poles.find(x => x.poleNo === d.poleNo);
+                        if (p) { d.lat = p.lat; d.lng = p.lng; }
+                    }
+                    if (!d.lat || !d.lng) return;
+
                     const m = L.marker([d.lat, d.lng], {
                         icon: L.divIcon({ className: 'dt-square-icon', html: `<span>${d.rating}k</span>`, iconSize: [26, 26], iconAnchor: [13, 13] })
                     });
@@ -778,6 +810,11 @@
             if (showConsumers) {
                 net.consumers.forEach(c => {
                     const pole = net.poles.find(p => p.poleNo === c.poleNo);
+                    if (!c.lat || !c.lng) {
+                        if (pole) { c.lat = pole.lat - 0.00012; c.lng = pole.lng + 0.00012; }
+                    }
+                    if (!c.lat || !c.lng) return;
+
                     if (pole && f.poles && currentZoom >= 16) {
                         const line = L.polyline([[pole.lat, pole.lng], [c.lat, c.lng]], { color: '#000000', weight: 1.5, dashArray: '3,3' });
                         featureGroups.consumerLines.addLayer(line);
@@ -800,7 +837,7 @@
                 });
             }
 
-            // KPIs
+            // Update KPIs
             let total11kVMeters = 0;
             net.lines.forEach(l => { if (getLineSpec(l.type).name === '11 KV LINE') total11kVMeters += (l.distanceMeters || 0); });
             if(document.getElementById('kpiLength')) document.getElementById('kpiLength').innerText = formatDistance(total11kVMeters);
@@ -838,17 +875,17 @@
        6. DT DEPENDENT DROPDOWNS & EDIT ROUTINES
        ================================================================= */
     function getDTRatingOptions(phase, selectedRating) {
-        const ratings = phase === 'Single Phase' 
+        const ratings = (phase === 'Single Phase') 
             ? [5, 10, 16, 25] 
             : [10, 16, 25, 40, 63, 100, 150, 200, 250, 300];
         return ratings.map(r => `<option value="${r}" ${selectedRating == r ? 'selected' : ''}>${r} KVA</option>`).join('');
     }
 
     function updateDTRatingDropdowns(phaseSelectId, ratingSelectId, currentRating = null) {
-        const phase = document.getElementById(phaseSelectId).value;
-        const ratingSelect = document.getElementById(ratingSelectId);
-        if (!ratingSelect) return;
-        ratingSelect.innerHTML = getDTRatingOptions(phase, currentRating);
+        const phaseElem = document.getElementById(phaseSelectId);
+        const ratingElem = document.getElementById(ratingSelectId);
+        if (!phaseElem || !ratingElem) return;
+        ratingElem.innerHTML = getDTRatingOptions(phaseElem.value, currentRating);
     }
 
     function openEditModal(type, id) {
@@ -866,7 +903,7 @@
                 <div class="form-row"><label>ट्रांसफार्मर प्रकार (Type)*</label><select id="editDTPhase" class="form-select" onchange="updateDTRatingDropdowns('editDTPhase', 'editDTRating')"><option value="Three Phase" ${currentPhase==='Three Phase'?'selected':''}>Three Phase</option><option value="Single Phase" ${currentPhase==='Single Phase'?'selected':''}>Single Phase</option></select></div>
                 <div class="form-row"><label>क्षमता (kVA)*</label><select id="editDTRating" class="form-select"></select></div>
                 <button class="btn-action-primary" onclick="saveEditedDT('${d.id}')">सेव करें</button>`);
-            setTimeout(() => updateDTRatingDropdowns('editDTPhase', 'editDTRating', d.rating), 20);
+            setTimeout(() => updateDTRatingDropdowns('editDTPhase', 'editDTRating', d.rating), 30);
         } else if (type === 'consumer') {
             const c = net.consumers.find(x => x.id === id); if (!c) return;
             openModal(`<div class="sheet-head"><div class="sheet-title">उपभोक्ता एडिट करें</div><button class="sheet-close-btn" onclick="closeModal()">×</button></div>
@@ -932,7 +969,7 @@
     }
 
     /* =================================================================
-       7. ADD ENTITIES
+       7. ADD ENTITIES & ROUTE ALGORITHM
        ================================================================= */
     function openAddNewFeederModal() {
         openModal(`<div class="sheet-head"><div class="sheet-title"><i class="fa-solid fa-plus-circle" style="color:#2563eb;"></i> नया फीडर बनाएं</div><button class="sheet-close-btn" onclick="closeModal()">×</button></div>
@@ -1003,7 +1040,7 @@
                 <div class="form-row"><label>ट्रांसफार्मर प्रकार (Type)*</label><select id="inpDTPhase" class="form-select" onchange="updateDTRatingDropdowns('inpDTPhase', 'inpDTRating')"><option value="Three Phase" selected>Three Phase</option><option value="Single Phase">Single Phase</option></select></div>
                 <div class="form-row"><label>क्षमता (kVA)*</label><select id="inpDTRating" class="form-select"></select></div>
                 <button class="btn-action-primary" onclick="saveNewDT()">माउंट करें</button>`);
-            setTimeout(() => updateDTRatingDropdowns('inpDTPhase', 'inpDTRating', 25), 20);
+            setTimeout(() => updateDTRatingDropdowns('inpDTPhase', 'inpDTRating', 25), 30);
         } else if (type === 'CONSUMER') {
             if (net.poles.length === 0) return alert("पहले पोल लगाएं!");
             const poleOpts = net.poles.map(p => `<option value="${p.poleNo}">${p.poleNo}</option>`).join('');
@@ -1073,8 +1110,53 @@
     }
 
     /* =================================================================
-       8. SETTINGS & EXPORTS
+       8. SETTINGS, FILTER, LIVE TRACKING & MODALS
        ================================================================= */
+    function updateExportPathPreference(val) {
+        appState.settings.exportPath = val;
+        updateExportPathHint();
+        triggerPersistence();
+    }
+
+    function updateExportPathHint() {
+        const hint = document.getElementById('exportPathHint');
+        if (!hint) return;
+        const val = appState.settings.exportPath || 'DOWNLOADS';
+        if (val === 'DOWNLOADS') {
+            hint.innerText = "फ़ाइलें डिवाइस के मुख्य Download फ़ोल्डर (/Download) में सुरक्षित होंगी।";
+        } else if (val === 'APP_DOCUMENTS') {
+            hint.innerText = "फ़ाइलें ऐप के प्राइवेट इंटरनल स्टोरेज में सुरक्षित रहेंगी।";
+        } else {
+            hint.innerText = "फ़ाइलें ब्राउज़र डाउनलोड मैनेजर या शेयर मेनू द्वारा डाउनलोड होंगी।";
+        }
+    }
+
+    function openExportPathModal() {
+        toggleSidebar(false);
+        const currentPath = appState.settings.exportPath || 'DOWNLOADS';
+        openModal(`<div class="sheet-head"><div class="sheet-title"><i class="fa-solid fa-folder-tree" style="color:#2563eb;"></i> एक्सपोर्ट फ़ाइल पाथ चुनें</div><button class="sheet-close-btn" onclick="closeModal()">×</button></div>
+            <div class="form-row">
+                <label>स्टोरेज लोकेशन (Save Directory)*</label>
+                <select id="modalExportPathSel" class="form-select">
+                    <option value="DOWNLOADS" ${currentPath==='DOWNLOADS'?'selected':''}>📁 Phone Downloads (Download/)</option>
+                    <option value="APP_DOCUMENTS" ${currentPath==='APP_DOCUMENTS'?'selected':''}>🔒 App Internal Storage</option>
+                    <option value="BROWSER_SHARE" ${currentPath==='BROWSER_SHARE'?'selected':''}>🌐 Browser Direct Download</option>
+                </select>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:12px;">एक्सपोर्ट की गई सभी फाइलें (CSV, PDF, DXF, KML) इसी लोकेशन में सेव होंगी।</p>
+            <button class="btn-action-primary" onclick="saveExportPathFromModal()">सेव करें</button>`);
+    }
+
+    function saveExportPathFromModal() {
+        const sel = document.getElementById('modalExportPathSel');
+        if (sel) {
+            appState.settings.exportPath = sel.value;
+            triggerPersistence();
+            showToast(`एक्सपोर्ट पाथ सेट: ${sel.value}`);
+        }
+        closeModal();
+    }
+
     function openFilterModal() {
         const f = appState.filters;
         openModal(`<div class="sheet-head"><div class="sheet-title"><i class="fa-solid fa-filter" style="color:#d97706;"></i> ऑब्जेक्ट फ़िल्टर</div><button class="sheet-close-btn" onclick="closeModal()">×</button></div>
@@ -1094,8 +1176,11 @@
     }
 
     function saveSettings() {
-        appState.settings.language = document.getElementById('setLanguage').value; appState.settings.checkOrphanNode = document.getElementById('setOrphan').checked;
-        appState.settings.locationAccuracy = document.getElementById('setAccuracy').value; appState.settings.unitOfDistance = document.getElementById('setUnit').value;
+        appState.settings.language = document.getElementById('setLanguage').value; 
+        appState.settings.checkOrphanNode = document.getElementById('setOrphan').checked;
+        appState.settings.locationAccuracy = document.getElementById('setAccuracy').value; 
+        appState.settings.unitOfDistance = document.getElementById('setUnit').value;
+        appState.settings.exportPath = document.getElementById('setExportPath').value;
         closeSettingsPage(); renderEntireNetwork(); triggerPersistence(); showToast("सेटिंग्स सुरक्षित!");
     }
 
@@ -1117,7 +1202,7 @@
         alert(orphans.length === 0 ? "✅ सभी पोल कनेक्टेड हैं।" : `⚠️ ${orphans.length} पोल कटे हुए हैं।`);
     }
 
-    /* ==== LIVE GPS TRACKING ALGORITHM (CORDOVA GEOLOCATION READY) ==== */
+    /* ==== LIVE GPS TRACKING ALGORITHM ==== */
     let liveTrackingId = null;
     let liveLocMarker = null;
     let liveLocCircle = null;
@@ -1155,7 +1240,113 @@
         }
     }
 
-    /* ================= PROFESSIONAL CAD SLD EXPORT ================= */
+    /* =================================================================
+       9. EXPORT & FILE PATH SAVING ENGINE
+       ================================================================= */
+    function downloadOrSaveExportFile(filename, dataBlobOrText, mimeType) {
+        const pathChoice = appState.settings.exportPath || 'DOWNLOADS';
+        const isCordova = Boolean(window.cordova && cordova.file);
+
+        if (isCordova && pathChoice !== 'BROWSER_SHARE') {
+            let targetDir = cordova.file.dataDirectory;
+            let displayFolderName = "App Storage";
+
+            if (pathChoice === 'DOWNLOADS' && cordova.file.externalRootDirectory) {
+                targetDir = cordova.file.externalRootDirectory + 'Download/';
+                displayFolderName = "Download/";
+            } else if (pathChoice === 'DOWNLOADS' && cordova.file.externalDataDirectory) {
+                targetDir = cordova.file.externalDataDirectory;
+                displayFolderName = "Android External App Storage";
+            }
+
+            window.resolveLocalFileSystemURL(targetDir, function (dirEntry) {
+                dirEntry.getFile(filename, { create: true, exclusive: false }, function (fileEntry) {
+                    fileEntry.createWriter(function (fileWriter) {
+                        fileWriter.onwriteend = function () {
+                            alert(`✅ फ़ाइल सफलतापूर्वक सुरक्षित हो गई!\n\nस्थान:\n${displayFolderName}${filename}`);
+                            showToast(`एक्सपोर्ट सफल: ${filename}`);
+                        };
+                        fileWriter.onerror = function (e) {
+                            console.error("Write error", e);
+                            fallbackWebDownload(filename, dataBlobOrText, mimeType);
+                        };
+                        const blob = (dataBlobOrText instanceof Blob) ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
+                        fileWriter.write(blob);
+                    });
+                }, function (err) {
+                    console.error("getFile error", err);
+                    fallbackWebDownload(filename, dataBlobOrText, mimeType);
+                });
+            }, function (err) {
+                console.error("resolveLocalFileSystemURL error", err);
+                fallbackWebDownload(filename, dataBlobOrText, mimeType);
+            });
+        } else {
+            fallbackWebDownload(filename, dataBlobOrText, mimeType);
+        }
+    }
+
+    function fallbackWebDownload(filename, dataBlobOrText, mimeType) {
+        const blob = (dataBlobOrText instanceof Blob) ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast(`डाउनलोड शुरू हुआ: ${filename}`);
+    }
+
+    function getCSVString() {
+        const net = getActiveNetwork();
+        let csv = "\uFEFF[POLES]\nPoleNo,Latitude,Longitude\n";
+        net.poles.forEach(p => { csv += `"${p.poleNo}",${p.lat},${p.lng}\n`; });
+        csv += "\n[LINES]\nLineType,FromNode,ToNode,DistanceMeters\n";
+        net.lines.forEach(l => { csv += `"${l.type}","${l.fromNode}","${l.toNode}",${(l.distanceMeters || 0).toFixed(1)}\n`; });
+        csv += "\n[TRANSFORMERS]\nDTCode,PoleNo,Phase,RatingKVA,Location,Latitude,Longitude\n";
+        net.dts.forEach(d => { csv += `"${d.code}","${d.poleNo}","${d.phase || 'Three Phase'}","${d.rating}","${d.location || ''}",${d.lat},${d.lng}\n`; });
+        csv += "\n[CONSUMERS]\nName,KNumber,ConnectedPole,Load,Latitude,Longitude\n";
+        net.consumers.forEach(c => { csv += `"${c.name}","${c.kno}","${c.poleNo}","${c.load}",${c.lat},${c.lng}\n`; });
+        return csv;
+    }
+
+    function exportDataToCSV() {
+        toggleSidebar(false);
+        const net = getActiveNetwork();
+        const csvStr = getCSVString();
+        const fname = `${net.feeder.name.replace(/\s+/g, '_')}_Data.csv`;
+        downloadOrSaveExportFile(fname, csvStr, "text/csv;charset=utf-8;");
+    }
+
+    function exportToAutoCAD_DXF() {
+        toggleSidebar(false); 
+        const net = getActiveNetwork(); 
+        let dxf = "0\nSECTION\n2\nENTITIES\n";
+        net.lines.forEach(l => {
+            if (l.coords && l.coords[0] && l.coords[1]) {
+                dxf += `0\nLINE\n8\n${l.type.replace(/\s+/g,'_')}\n10\n${l.coords[0][1]}\n20\n${l.coords[0][0]}\n30\n0\n11\n${l.coords[1][1]}\n21\n${l.coords[1][0]}\n31\n0\n`;
+            }
+        });
+        dxf += "0\nENDSEC\n0\nEOF\n";
+        const fname = `${net.feeder.name.replace(/\s+/g, '_')}.dxf`;
+        downloadOrSaveExportFile(fname, dxf, "application/dxf");
+    }
+
+    function exportToGoogleEarth_KML() {
+        toggleSidebar(false); 
+        const net = getActiveNetwork(); 
+        let kml = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${net.feeder.name}</name>`;
+        net.lines.forEach(l => {
+            if (l.coords && l.coords[0] && l.coords[1]) {
+                kml += `<Placemark><name>${l.type}</name><LineString><coordinates>${l.coords[0][1]},${l.coords[0][0]},0 ${l.coords[1][1]},${l.coords[1][0]},0</coordinates></LineString></Placemark>`;
+            }
+        });
+        kml += "</Document></kml>";
+        const fname = `${net.feeder.name.replace(/\s+/g, '_')}.kml`;
+        downloadOrSaveExportFile(fname, kml, "application/vnd.google-earth.kml+xml");
+    }
+
     function generateCadSLDPdf() {
         toggleSidebar(false);
         const net = getActiveNetwork();
@@ -1206,7 +1397,7 @@
             ctx.translate(dx + 8, dy + 4);
             ctx.rotate(-Math.PI / 6);
             ctx.fillStyle = "#b45309"; ctx.font = "bold 16px Arial"; ctx.textAlign = "left";
-            ctx.fillText(`${d.rating}kVA`, 0, 0);
+            ctx.fillText(`${d.rating}kVA (${d.phase==='Single Phase'?'1-Ph':'3-Ph'})`, 0, 0);
             ctx.restore();
         });
 
@@ -1220,62 +1411,220 @@
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
         pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, 420, 297);
-        pdf.save(`${net.feeder.name.replace(/\s+/g, '_')}_CAD_SLD.pdf`);
+        const fname = `${net.feeder.name.replace(/\s+/g, '_')}_CAD_SLD.pdf`;
+        const pdfBlob = pdf.output('blob');
+        downloadOrSaveExportFile(fname, pdfBlob, "application/pdf");
     }
 
-    function exportToAutoCAD_DXF() {
-        toggleSidebar(false); const net = getActiveNetwork(); let dxf = "0\nSECTION\n2\nENTITIES\n";
-        net.lines.forEach(l => {
-            if (l.coords && l.coords[0] && l.coords[1]) {
-                dxf += `0\nLINE\n8\n${l.type.replace(/\s+/g,'_')}\n10\n${l.coords[0][1]}\n20\n${l.coords[0][0]}\n30\n0\n11\n${l.coords[1][1]}\n21\n${l.coords[1][0]}\n31\n0\n`;
+    /* =================================================================
+       10. IMPORT ENGINE (RESOLVED CSV PARSER & JSON BACKUP)
+       ================================================================= */
+    function parseCSVLine(line) {
+        const row = [];
+        let inQuotes = false;
+        let val = '';
+        for (let i = 0; i < line.length; i++) {
+            const c = line[i];
+            if (c === '"') {
+                if (inQuotes && line[i + 1] === '"') {
+                    val += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (c === ',' && !inQuotes) {
+                row.push(val.trim());
+                val = '';
+            } else {
+                val += c;
             }
-        });
-        dxf += "0\nENDSEC\n0\nEOF\n";
-        const blob = new Blob([dxf], { type: "application/dxf" });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${net.feeder.name}.dxf`; a.click();
+        }
+        row.push(val.trim());
+        return row;
     }
 
-    function exportToGoogleEarth_KML() {
-        toggleSidebar(false); const net = getActiveNetwork(); let kml = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${net.feeder.name}</name>`;
-        net.lines.forEach(l => {
-            if (l.coords && l.coords[0] && l.coords[1]) {
-                kml += `<Placemark><name>${l.type}</name><LineString><coordinates>${l.coords[0][1]},${l.coords[0][0]},0 ${l.coords[1][1]},${l.coords[1][0]},0</coordinates></LineString></Placemark>`;
-            }
-        });
-        kml += "</Document></kml>";
-        const blob = new Blob([kml], { type: "application/vnd.google-earth.kml+xml" });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${net.feeder.name}.kml`; a.click();
-    }
+    function handleCSVImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
 
-    function getCSVString() {
-        const net = getActiveNetwork();
-        let csv = "\uFEFF[POLES]\nPoleNo,Latitude,Longitude\n";
-        net.poles.forEach(p => { csv += `"${p.poleNo}",${p.lat},${p.lng}\n`; });
-        csv += "\n[LINES]\nLineType,FromNode,ToNode,DistanceMeters\n";
-        net.lines.forEach(l => { csv += `"${l.type}","${l.fromNode}","${l.toNode}",${(l.distanceMeters || 0).toFixed(1)}\n`; });
-        csv += "\n[TRANSFORMERS]\nDTCode,PoleNo,Phase,RatingKVA,Location,Latitude,Longitude\n";
-        net.dts.forEach(d => { csv += `"${d.code}","${d.poleNo}","${d.phase || 'Three Phase'}","${d.rating}","${d.location || ''}",${d.lat},${d.lng}\n`; });
-        csv += "\n[CONSUMERS]\nName,KNumber,ConnectedPole,Load,Latitude,Longitude\n";
-        net.consumers.forEach(c => { csv += `"${c.name}","${c.kno}","${c.poleNo}","${c.load}",${c.lat},${c.lng}\n`; });
-        return csv;
-    }
-
-    function exportDataToCSV() {
-        toggleSidebar(false);
-        const csvStr = getCSVString();
-        const blob = new Blob([csvStr], { type: "text/csv;charset=utf-8;" });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${getActiveNetwork().feeder.name}_Data.csv`; a.click();
-    }
-
-    function handleUnifiedImport(e) {
-        const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
         reader.onload = (ev) => {
             try {
-                appState.feeders = JSON.parse(ev.target.result); appState.currentFeederCode = Object.keys(appState.feeders)[0];
-                renderEntireNetwork(); triggerPersistence(); alert("बैकअप सफलतापूर्वक लोड हुआ!"); toggleSidebar(false);
-            } catch(err) { alert("अमान्य फाइल फॉर्मेट"); }
+                let text = ev.target.result || '';
+                if (text.charCodeAt(0) === 0xFEFF) {
+                    text = text.slice(1);
+                }
+
+                const lines = text.split(/\r?\n/);
+                let currentSection = null;
+                const importedPoles = [];
+                const importedLines = [];
+                const importedDTs = [];
+                const importedConsumers = [];
+
+                for (let i = 0; i < lines.length; i++) {
+                    const rawLine = lines[i].trim();
+                    if (!rawLine) continue;
+
+                    if (rawLine.toUpperCase().startsWith('[POLES]')) { currentSection = 'POLES'; continue; }
+                    if (rawLine.toUpperCase().startsWith('[LINES]')) { currentSection = 'LINES'; continue; }
+                    if (rawLine.toUpperCase().startsWith('[TRANSFORMERS]') || rawLine.toUpperCase().startsWith('[DTS]')) { currentSection = 'TRANSFORMERS'; continue; }
+                    if (rawLine.toUpperCase().startsWith('[CONSUMERS]')) { currentSection = 'CONSUMERS'; continue; }
+
+                    const cols = parseCSVLine(rawLine);
+                    if (!cols || cols.length === 0 || !cols[0]) continue;
+
+                    if (currentSection === 'POLES') {
+                        if (cols[0].toLowerCase().includes('poleno')) continue;
+                        const poleNo = cols[0].replace(/^"|"$/g, '').trim();
+                        const lat = parseFloat(cols[1]);
+                        const lng = parseFloat(cols[2]);
+                        if (poleNo && !isNaN(lat) && !isNaN(lng)) {
+                            importedPoles.push({ id: 'P_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), poleNo, lat, lng });
+                        }
+                    } else if (currentSection === 'LINES') {
+                        if (cols[0].toLowerCase().includes('linetype')) continue;
+                        const type = cols[0].replace(/^"|"$/g, '').trim();
+                        const fromNode = cols[1] ? cols[1].replace(/^"|"$/g, '').trim() : '';
+                        const toNode = cols[2] ? cols[2].replace(/^"|"$/g, '').trim() : '';
+                        const dist = parseFloat(cols[3]) || 0;
+                        if (type && fromNode && toNode) {
+                            importedLines.push({
+                                id: 'LN_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                                type,
+                                fromNode,
+                                toNode,
+                                distanceMeters: dist,
+                                coords: []
+                            });
+                        }
+                    } else if (currentSection === 'TRANSFORMERS') {
+                        if (cols[0].toLowerCase().includes('dtcode')) continue;
+                        const code = cols[0].replace(/^"|"$/g, '').trim();
+                        const poleNo = cols[1] ? cols[1].replace(/^"|"$/g, '').trim() : '';
+                        const phase = cols[2] ? cols[2].replace(/^"|"$/g, '').trim() : 'Three Phase';
+                        const rating = parseFloat(cols[3]) || 25;
+                        const location = cols[4] ? cols[4].replace(/^"|"$/g, '').trim() : '';
+                        const lat = parseFloat(cols[5]) || 0;
+                        const lng = parseFloat(cols[6]) || 0;
+                        if (code && poleNo) {
+                            importedDTs.push({
+                                id: 'DT_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                                code,
+                                poleNo,
+                                phase,
+                                rating,
+                                location,
+                                lat,
+                                lng
+                            });
+                        }
+                    } else if (currentSection === 'CONSUMERS') {
+                        if (cols[0].toLowerCase().includes('name')) continue;
+                        const name = cols[0].replace(/^"|"$/g, '').trim();
+                        const kno = cols[1] ? cols[1].replace(/^"|"$/g, '').trim() : '';
+                        const poleNo = cols[2] ? cols[2].replace(/^"|"$/g, '').trim() : '';
+                        const load = cols[3] ? cols[3].replace(/^"|"$/g, '').trim() : '2.0 kW';
+                        const lat = parseFloat(cols[4]) || 0;
+                        const lng = parseFloat(cols[5]) || 0;
+                        if (name && poleNo) {
+                            importedConsumers.push({
+                                id: 'CS_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                                name,
+                                kno,
+                                poleNo,
+                                load,
+                                lat,
+                                lng
+                            });
+                        }
+                    }
+                }
+
+                if (importedPoles.length === 0 && importedLines.length === 0) {
+                    return alert("⚠️ CSV फ़ाइल में कोई वैध खंभा (Pole) या लाइन डेटा नहीं मिला!");
+                }
+
+                const net = getActiveNetwork();
+                net.poles = importedPoles;
+                net.dts = importedDTs;
+                net.lines = importedLines;
+                net.consumers = importedConsumers;
+
+                // Reconstruct Coordinates for Lines
+                net.lines.forEach(l => {
+                    const c1 = getNodeCoords(l.fromNode);
+                    const c2 = getNodeCoords(l.toNode);
+                    if (c1 && c2) {
+                        l.coords = [[c1.lat, c1.lng], [c2.lat, c2.lng]];
+                        if (!l.distanceMeters) l.distanceMeters = calcDistance(c1.lat, c1.lng, c2.lat, c2.lng);
+                    }
+                });
+
+                // Attach Coordinates for DTs and Consumers from their poles
+                net.dts.forEach(d => {
+                    if (!d.lat || !d.lng) {
+                        const p = net.poles.find(x => x.poleNo === d.poleNo);
+                        if (p) { d.lat = p.lat; d.lng = p.lng; }
+                    }
+                });
+                net.consumers.forEach(c => {
+                    if (!c.lat || !c.lng) {
+                        const p = net.poles.find(x => x.poleNo === c.poleNo);
+                        if (p) { c.lat = p.lat - 0.00012; c.lng = p.lng + 0.00012; }
+                    }
+                });
+
+                renderEntireNetwork();
+                triggerPersistence();
+                toggleSidebar(false);
+
+                if (net.poles.length > 0) {
+                    map.flyTo([net.poles[0].lat, net.poles[0].lng], 16);
+                }
+
+                alert(`✅ CSV डेटा सफलतापूर्वक लोड हो गया!\n\n• खंभे (Poles): ${net.poles.length}\n• लाइनें (Lines): ${net.lines.length}\n• ट्रांसफार्मर (DT): ${net.dts.length}\n• उपभोक्ता (Consumers): ${net.consumers.length}`);
+                showToast("CSV डेटा सफलतापूर्वक लोड हुआ!");
+            } catch (err) {
+                console.error("CSV parse error:", err);
+                alert("⚠️ CSV फ़ाइल पार्स करने में त्रुटि: " + err.message);
+            }
+        };
+
+        reader.readAsText(file);
+        e.target.value = '';
+    }
+
+    function handleJSONImport(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const parsed = JSON.parse(ev.target.result);
+                if (parsed.feeders) {
+                    appState.feeders = parsed.feeders;
+                    appState.currentFeederCode = parsed.active || Object.keys(parsed.feeders)[0];
+                } else if (parsed.poles || parsed.lines) {
+                    const net = getActiveNetwork();
+                    if (parsed.poles) net.poles = parsed.poles;
+                    if (parsed.lines) net.lines = parsed.lines;
+                    if (parsed.dts) net.dts = parsed.dts;
+                    if (parsed.consumers) net.consumers = parsed.consumers;
+                } else {
+                    appState.feeders = parsed;
+                    appState.currentFeederCode = Object.keys(appState.feeders)[0];
+                }
+                renderEntireNetwork();
+                triggerPersistence();
+                toggleSidebar(false);
+                alert("✅ बैकअप सफलतापूर्वक लोड हुआ!");
+            } catch (err) {
+                alert("⚠️ अमान्य JSON फ़ाइल फॉर्मेट: " + err.message);
+            }
         };
         reader.readAsText(file);
+        e.target.value = '';
     }
 
     /* ================= CORDOVA & DOM INITIALIZATION ================= */
@@ -1285,12 +1634,12 @@
             const c = map.getCenter();
             const coordElem = document.getElementById('reticle-coordinates');
             if (coordElem) coordElem.innerText = `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`;
+            updateExportPathHint();
         });
     }
 
     document.addEventListener('deviceready', initializeApplication, false);
     window.addEventListener('DOMContentLoaded', () => {
-        // Fallback for browser testing
         if (!window.cordova) {
             initializeApplication();
         }
