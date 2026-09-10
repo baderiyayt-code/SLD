@@ -23,20 +23,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK 33 Components & Licenses
+      - name: Setup Android SDK Components
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Install Compatible Gradle (8.2.1)
-        run: |
-          sudo rm -rf /usr/share/gradle*
-          sudo rm -f /usr/bin/gradle /usr/local/bin/gradle
-          wget -q https://services.gradle.org/distributions/gradle-8.2.1-bin.zip
-          sudo unzip -q -o gradle-8.2.1-bin.zip -d /opt
-          sudo ln -s /opt/gradle-8.2.1/bin/gradle /usr/local/bin/gradle
-
-      - name: Setup Node.js 18
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -49,11 +41,11 @@ jobs:
           npm install
           cordova platform rm android || true
           cordova platform add android@12.0.1
-          cordova build android --debug
+          cordova build android --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DISCOM-Survey-APK
-          path: platforms/android/app/build/outputs/apk/debug/*.apk
+          path: platforms/android/app/build/outputs/apk/release/*.apk
           retention-days: 7
