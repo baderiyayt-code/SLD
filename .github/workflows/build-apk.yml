@@ -37,13 +37,13 @@ jobs:
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      # नया स्टेप: एरर रोकने के लिए डमी लोगो (Icon) जनरेट करना
+      # 100% सेफ डमी लोगो जेनरेटर (Base64) 
       - name: Create Temp App Icon (Fix for missing icon)
         run: |
           if [ ! -f "res/icon.png" ]; then
             mkdir -p res
-            convert -size 512x512 xc:#2563eb res/icon.png
-            echo "Dummy icon created successfully!"
+            echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=" | base64 -d > res/icon.png
+            echo "Dummy transparent icon created successfully!"
           fi
 
       - name: Install Dependencies & Add Android Platform
