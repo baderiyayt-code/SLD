@@ -77,25 +77,33 @@
         .center-plus-fab { width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; border: 3px solid var(--bg-sheet); box-shadow: 0 8px 25px var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s; }
         .center-plus-fab.open { transform: rotate(45deg); background: #ef4444; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3); }
 
-        #speed-dial-menu { position: absolute; bottom: calc(95px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) scale(0.9); width: calc(100% - 24px); max-width: 380px; background: var(--bg-glass); backdrop-filter: blur(20px); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: all 0.2s; z-index: 1001; }
+        #speed-dial-menu { position: absolute; bottom: calc(95px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) scale(0.9); width: calc(100% - 24px); max-width: 450px; background: var(--bg-glass); backdrop-filter: blur(20px); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: all 0.2s; z-index: 1001; }
         #speed-dial-menu.active { opacity: 1; pointer-events: auto; transform: translateX(-50%) scale(1); }
-        .dial-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .dial-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
         .dial-card { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; box-shadow: var(--shadow-sm); }
         .dial-card i { font-size: 1.3rem; }
-        .dial-card span { font-size: 0.65rem; font-weight: 700; color: var(--text-main); }
+        .dial-card span { font-size: 0.60rem; font-weight: 700; color: var(--text-main); text-align: center;}
 
         /* ====== TOAST ====== */
         #app-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e293b; color: #ffffff; padding: 12px 20px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; box-shadow: var(--shadow-md); z-index: 5000; opacity: 0; transition: all 0.3s; display: flex; align-items: center; gap: 10px; width: max-content; max-width: 90%; }
         #app-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* ====== ICONS ====== */
-        .pole-marker-icon { background: #fde047; color: #0f172a; border: 2.5px solid #0f172a; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); width: 26px; height: 26px; }
-        .pole-marker-icon.orphan-pulse { background: #ef4444 !important; color: white !important; border-color: white !important; animation: redGlow 1s infinite !important; }
-        @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        /* ====== ICONS & Z-INDEX LOGIC ====== */
+        /* Z-Index Hierarchy: Consumer > LT Pole > LT Line > DT > HT Pole > GSS */
         
-        .dt-square-icon { background: #f59e0b; color: white; border: 1.5px solid white; border-radius: 6px; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4); }
-        .consumer-marker-icon { background: #10b981; color: white; border: 1px solid white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 8px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4); }
-        .gss-square-icon { background: #b91c1c; color: white; border: 2px solid white; border-radius: 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4); }
+        .gss-square-icon { background: #b91c1c; color: white; border: 2px solid white; border-radius: 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4); z-index: 400 !important;}
+        .gss-mini-dot { background: #b91c1c; border-radius: 50%; border: 2px solid white; width: 16px; height: 16px; z-index: 400 !important; }
+
+        .pole-marker-icon { background: #fde047; color: #0f172a; border: 2.5px solid #0f172a; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); width: 26px; height: 26px; z-index: 500 !important;}
+        .pole-marker-icon.orphan-pulse { background: #ef4444 !important; color: white !important; border-color: white !important; animation: redGlow 1s infinite !important; }
+        
+        .dt-square-icon { background: #f59e0b; color: white; border: 1.5px solid white; border-radius: 6px; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4); z-index: 600 !important;}
+        
+        .lt-pole-icon { background: #10b981; color: white; border: 2px solid white; border-radius: 50%; font-size: 9px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 22px; height: 22px; z-index: 700 !important;}
+        
+        .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5); z-index: 800 !important;}
+        
+        @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
         /* ====== MODALS ====== */
         .modal-overlay, #sidebarBackdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 2000; display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.2s;}
@@ -188,10 +196,11 @@
 
     <div id="speed-dial-menu">
         <div class="dial-grid">
-            <div class="dial-card" onclick="openAddForm('POLE')"><i class="fa-solid fa-grip-lines-vertical" style="color:#0ea5e9;"></i><span>Pole</span></div>
+            <div class="dial-card" onclick="openAddForm('POLE')"><i class="fa-solid fa-grip-lines-vertical" style="color:#0ea5e9;"></i><span>HT Pole</span></div>
+            <div class="dial-card" onclick="openAddForm('LTPOLE')"><i class="fa-solid fa-grip-lines-vertical" style="color:#10b981;"></i><span>LT Pole</span></div>
             <div class="dial-card" onclick="openAddForm('LINE')"><i class="fa-solid fa-arrow-trend-up" style="color:#2563eb;"></i><span>Line</span></div>
             <div class="dial-card" onclick="openAddForm('DT')"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i><span>DT</span></div>
-            <div class="dial-card" onclick="openAddForm('CONSUMER')"><i class="fa-solid fa-user-plus" style="color:#10b981;"></i><span>Consumer</span></div>
+            <div class="dial-card" onclick="openAddForm('CONSUMER')"><i class="fa-solid fa-user-plus" style="color:#3b82f6;"></i><span>Consumer</span></div>
         </div>
     </div>
 
@@ -431,8 +440,8 @@
     const map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true, rotate: true }).setView([26.9150, 75.7830], 16);
     const tileLayers = { 
         hybrid: { name: 'Hybrid Map', layer: L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 22 }) }, 
-        streets: { name: 'Street Map', layer: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 22 }) },
-        osm: { name: 'OpenStreetMap', layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }) }
+        osm: { name: 'OpenStreetMap', layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }) },
+        streets: { name: 'Street Map', layer: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 22 }) }
     };
     let currentTileIndex = 0; const layerKeys = Object.keys(tileLayers); 
     tileLayers[layerKeys[currentTileIndex]].layer.addTo(map);
@@ -444,7 +453,23 @@
         document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
+    // Leaflet Panes for Z-Index Control (Consumer > LT Pole > LT Line > DT > HT Pole > GSS)
+    map.createPane('gssPane'); map.getPane('gssPane').style.zIndex = 400;
+    map.createPane('htPolePane'); map.getPane('htPolePane').style.zIndex = 450;
+    map.createPane('dtPane'); map.getPane('dtPane').style.zIndex = 500;
+    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 550;
+    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 560;
+    map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 600;
+    map.createPane('consumerPane'); map.getPane('consumerPane').style.zIndex = 700;
+
+    const featureGroups = { 
+        gss: L.layerGroup().addTo(map), 
+        lines: L.layerGroup().addTo(map), 
+        poles: L.layerGroup().addTo(map), 
+        dts: L.layerGroup().addTo(map), 
+        consumers: L.layerGroup().addTo(map), 
+        consumerLines: L.layerGroup().addTo(map) 
+    };
 
     map.on('move', () => { const c = map.getCenter(); document.getElementById('reticle-coordinates').innerText = `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`; });
     map.on('zoomend', () => renderEntireNetwork());
@@ -471,11 +496,17 @@
         try {
             updateOrphanStatus(); Object.values(featureGroups).forEach(g => g.clearLayers());
             const net = getActiveNetwork(), f = appState.filters, currentZoom = map.getZoom();
-            const showConsumers = currentZoom >= 19 && f.consumers, showDTs = currentZoom >= 17 && f.dts, showPoles = currentZoom >= 15 && f.poles, isGssMini = currentZoom < 14;
+            
+            // Map Zoom Behavior Control
+            const showConsumers = currentZoom >= 19 && f.consumers;
+            const showLTPoles = currentZoom >= 17 && f.poles;
+            const showDTs = currentZoom >= 16 && f.dts;
+            const showHTPoles = currentZoom >= 15 && f.poles;
+            const isGssMini = currentZoom < 14;
 
             if (net.gss && typeof net.gss.lat === 'number') {
                 const gssIcon = isGssMini ? L.divIcon({ className: 'gss-mini-dot', iconSize: [16,16], iconAnchor: [8,8] }) : L.divIcon({ className: 'gss-square-icon', html: `<span>GSS</span>`, iconSize: [32,32], iconAnchor: [16,16] });
-                const m = L.marker([net.gss.lat, net.gss.lng], { icon: gssIcon });
+                const m = L.marker([net.gss.lat, net.gss.lng], { icon: gssIcon, pane: 'gssPane' });
                 m.bindPopup(`<div style="padding:4px;"><b style="color:#b91c1c; font-size:1.1rem;">GSS / Root: ${net.gss.name}</b><br><small>Code: ${net.gss.code}</small></div>`);
                 featureGroups.gss.addLayer(m);
             }
@@ -497,8 +528,14 @@
                     const spec = getLineSpec(line.type); let offsetMeters = (totalInSpan > 1) ? (idx - (totalInSpan - 1) / 2) * 3.2 : 0;
                     const shiftedCoords = computeParallelOffset(line.coords, offsetMeters);
                     
-                    const hitPoly = L.polyline(shiftedCoords, { color: 'transparent', weight: 25 }).addTo(featureGroups.lines);
-                    L.polyline(shiftedCoords, { color: spec.color, weight: spec.weight, dashArray: spec.dash, lineCap: 'round', interactive: false }).addTo(featureGroups.lines);
+                    const isLT = spec.name.includes('LT');
+                    const targetPane = isLT ? 'ltLinePane' : 'htLinePane';
+                    
+                    // Show LT lines only if zoom is appropriate
+                    if (isLT && !showLTPoles) return;
+
+                    const hitPoly = L.polyline(shiftedCoords, { color: 'transparent', weight: 25, pane: targetPane }).addTo(featureGroups.lines);
+                    L.polyline(shiftedCoords, { color: spec.color, weight: spec.weight, dashArray: spec.dash, lineCap: 'round', interactive: false, pane: targetPane }).addTo(featureGroups.lines);
                     
                     hitPoly.bindPopup(`<div style="padding:4px;"><b style="color:${spec.color};">${spec.name}</b><p style="margin:4px 0;">From-To: <b>${line.fromNode} ➔ ${line.toNode}</b></p><p style="margin:4px 0;">Distance: <b>${formatDistance(line.distanceMeters||0)}</b></p><button style="width:100%; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; font-weight:700;" onclick="deleteEntity('line','${line.id}')">Delete</button></div>`);
                 });
@@ -506,9 +543,17 @@
 
             if (f.poles) {
                 net.poles.forEach(p => {
-                    const isOrphan = appState.orphanPoleIds.has(p.id); if (!showPoles && !isOrphan) return;
-                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: 'pole-marker-icon' + (isOrphan ? ' orphan-pulse' : ''), html: `<span>${p.poleNo}</span>`, iconSize: [26,26], iconAnchor: [13,13] }) });
-                    m.bindPopup(`<div style="padding:4px;"><b>Pole: ${p.poleNo} (${p.lineType || 'HT'})</b><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#fef3c7; border:none; border-radius:6px;" onclick="startObjectMove('POLE','${p.id}','${p.poleNo}')">Move</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="deleteEntity('pole','${p.id}')">Delete</button></div></div>`);
+                    const isOrphan = appState.orphanPoleIds.has(p.id); 
+                    const isLT = p.lineType === 'LT';
+                    
+                    if (isLT && !showLTPoles && !isOrphan) return;
+                    if (!isLT && !showHTPoles && !isOrphan) return;
+
+                    const iconClass = isLT ? 'lt-pole-icon' : 'pole-marker-icon';
+                    const pane = isLT ? 'ltPolePane' : 'htPolePane';
+
+                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: iconClass + (isOrphan ? ' orphan-pulse' : ''), html: `<span>${p.poleNo}</span>`, iconSize: [isLT?22:26, isLT?22:26], iconAnchor: [isLT?11:13, isLT?11:13] }), pane: pane });
+                    m.bindPopup(`<div style="padding:4px;"><b>Pole: ${p.poleNo} (${p.lineType || 'HT'})</b><p style="margin:4px 0; font-size:0.8rem;">Parent: ${p.dtCode || 'Feeder'}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#fef3c7; border:none; border-radius:6px;" onclick="startObjectMove('POLE','${p.id}','${p.poleNo}')">Move</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="deleteEntity('pole','${p.id}')">Delete</button></div></div>`);
                     featureGroups.poles.addLayer(m);
                 });
             }
@@ -521,7 +566,7 @@
                         if (p) { d.lat = p.lat; d.lng = p.lng; } 
                         else { d.lat = net.gss.lat; d.lng = net.gss.lng; }
                     }
-                    const m = L.marker([d.lat, d.lng], { icon: L.divIcon({ className: 'dt-square-icon' + (isOrphan ? ' orphan-pulse' : ''), html: `${d.rating}`, iconSize: [22,22], iconAnchor: [11,11] }) });
+                    const m = L.marker([d.lat, d.lng], { icon: L.divIcon({ className: 'dt-square-icon' + (isOrphan ? ' orphan-pulse' : ''), html: `${d.rating}`, iconSize: [22,22], iconAnchor: [11,11] }), pane: 'dtPane' });
                     m.bindPopup(`<div style="padding:4px;"><b style="color:#d97706;">DT: ${d.code}</b><p style="margin:4px 0;">Rating: ${d.rating} kVA<br>Parent Pole/Feeder: ${d.parentPole}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#fef3c7; border:none; border-radius:6px;" onclick="startObjectMove('DT','${d.id}','${d.code}')">Move</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="deleteEntity('dt','${d.id}')">Delete</button></div></div>`);
                     featureGroups.dts.addLayer(m);
                 });
@@ -544,10 +589,10 @@
                     }
 
                     if (f.poles && currentZoom >= 16) { 
-                        L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#000000', weight: 1, dashArray: '2,4' }).addTo(featureGroups.consumerLines); 
+                        L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#3b82f6', weight: 1, dashArray: '2,4', pane: 'consumerPane' }).addTo(featureGroups.consumerLines); 
                     }
                     
-                    const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: 'consumer-marker-icon', html: `<i class="fa-solid fa-house"></i>`, iconSize: [16,16], iconAnchor: [8,8] }) });
+                    const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: 'consumer-marker-icon', html: `<i class="fa-solid fa-house"></i>`, iconSize: [18,18], iconAnchor: [9,9] }), pane: 'consumerPane' });
                     m.bindPopup(`<div style="padding:4px;"><b>${c.name}</b><p style="color:#64748b; margin:4px 0;">K-No: ${c.kno} | Connected to: ${c.parentRef}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:6px; background:#fef3c7; border:none; border-radius:6px;" onclick="startObjectMove('CONSUMER','${c.id}','${c.name}')">Move</button><button style="flex:1; padding:6px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="deleteEntity('consumer','${c.id}')">Delete</button></div></div>`);
                     featureGroups.consumers.addLayer(m);
                 });
@@ -580,6 +625,10 @@
             net.dts = net.dts.filter(x => x.id !== id);
             net.consumers = net.consumers.filter(c => c.parentRef != d.code);
             net.lines = net.lines.filter(l => l.fromNode != d.code && l.toNode != d.code);
+            // Delete associated LT poles
+            const ltPolesToRemove = net.poles.filter(p => p.dtCode == d.code).map(p => p.poleNo);
+            net.poles = net.poles.filter(p => p.dtCode != d.code);
+            net.lines = net.lines.filter(l => !ltPolesToRemove.includes(l.fromNode) && !ltPolesToRemove.includes(l.toNode));
         }
         else if (type === 'consumer') net.consumers = net.consumers.filter(x => x.id !== id);
         
@@ -666,28 +715,44 @@
 
         if (type === 'POLE') {
             const nextNo = net.poles.length + 1;
-            openModal(`<div class="sheet-head"><div class="sheet-title">Add Pole (HT/LT)</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+            openModal(`<div class="sheet-head"><div class="sheet-title">Add HT Pole</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Pole Number*</label><input type="number" id="inpPoleNo" class="form-input" value="${nextNo}"></div>
-                <div class="form-row"><label>Pole Category*</label><select id="inpPoleCategory" class="form-select"><option value="HT" selected>HT Pole (11kV / 33kV)</option><option value="LT">LT Pole</option></select></div>
+                <input type="hidden" id="inpPoleCategory" value="HT">
                 <input type="hidden" id="inpLat" value="${snapLat}"><input type="hidden" id="inpLng" value="${snapLng}">
-                <button class="btn-action-primary" onclick="saveNewPole()">Save Pole</button>`);
+                <button class="btn-action-primary" onclick="saveNewPole()">Save HT Pole</button>`);
+        } else if (type === 'LTPOLE') {
+            if (net.dts.length === 0) return alert("You must add a DT first before adding an LT Pole!");
+            const nextNo = net.poles.length + 1;
+            
+            // Auto Select Nearest DT
+            const dtList = net.dts.map(d => ({ id: d.code, lat: d.lat, lng: d.lng }));
+            const nearestDT = findNearestNode(snapLat, snapLng, dtList);
+            const dtOpts = net.dts.map(d => `<option value="${d.code}" ${nearestDT && nearestDT.id==d.code?'selected':''}>DT: ${d.code}</option>`).join('');
+
+            openModal(`<div class="sheet-head"><div class="sheet-title">Add LT Pole</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+                <div class="form-row"><label>Associated DT*</label><select id="inpLTPoleDT" class="form-select">${dtOpts}</select></div>
+                <div class="form-row"><label>Pole Number*</label><input type="number" id="inpPoleNo" class="form-input" value="${nextNo}"></div>
+                <input type="hidden" id="inpPoleCategory" value="LT">
+                <input type="hidden" id="inpLat" value="${snapLat}"><input type="hidden" id="inpLng" value="${snapLng}">
+                <button class="btn-action-primary" onclick="saveNewLTPole()">Save LT Pole</button>`);
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
-            
-            // Auto Parenting for Line (Find nearest HT Pole for defaults)
-            const htPolesList = net.poles.filter(p => p.lineType !== 'LT').map(p => ({ id: p.poleNo, lat: p.lat, lng: p.lng }));
-            const nearestPole = findNearestNode(snapLat, snapLng, htPolesList);
-            const defaultFrom = nearestPole ? nearestPole.id : net.gss.code;
-
-            const fromOpts = `<option value="${net.gss.code}">GSS (${net.gss.code})</option>` + net.poles.map(p => `<option value="${p.poleNo}" ${defaultFrom==p.poleNo?'selected':''}>Pole ${p.poleNo} (${p.lineType || 'HT'})</option>`).join('');
             openModal(`<div class="sheet-head"><div class="sheet-title">Add Electrical Line</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Line Type*</label><select id="inpLineType" class="form-select" onchange="filterLineNodes()"><option value="11 KV LINE" selected>11 KV Line</option><option value="33 KV LINE">33 KV Line</option><option value="LT LINE">LT Line</option></select></div>
+                <div id="ltLineDTSelector" style="display:none; background:#f1f5f9; padding:8px; border-radius:8px; margin-bottom:12px;">
+                    <label style="font-size:0.75rem; font-weight:700;">Select DT for LT Line Routing*</label>
+                    <select id="inpTargetDT" class="form-select" onchange="filterLineNodes()"></select>
+                </div>
                 <div class="form-grid-2">
-                    <div class="form-row"><label>From Node*</label><select id="inpFromNode" class="form-select" onchange="syncLineToSelect()">${fromOpts}</select></div>
+                    <div class="form-row"><label>From Node*</label><select id="inpFromNode" class="form-select" onchange="syncLineToSelect()"></select></div>
                     <div class="form-row"><label>To Node*</label><select id="inpToNode" class="form-select"></select></div>
                 </div>
                 <button class="btn-action-primary" onclick="saveNewLine()">Save Line</button>`);
-            setTimeout(() => { filterLineNodes(); syncLineToSelect(); }, 30);
+            setTimeout(() => { 
+                const dtOpts = net.dts.map(d => `<option value="${d.code}">DT: ${d.code}</option>`).join('');
+                document.getElementById('inpTargetDT').innerHTML = dtOpts;
+                filterLineNodes(); 
+            }, 30);
         } else if (type === 'DT') {
             const parentOpts = `<option value="${net.feeder.code}">Feeder Root (${net.feeder.code})</option>` + net.poles.map(p => `<option value="${p.poleNo}">Pole ${p.poleNo}</option>`).join('');
             openModal(`<div class="sheet-head"><div class="sheet-title">Add DT</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
@@ -729,24 +794,29 @@
         }
     }
 
-    /* ====== 3. 33kV & HT/LT LINE LOGIC ====== */
+    /* ====== 3. STRICT 33kV & HT/LT LINE LOGIC ====== */
     function filterLineNodes() {
         const type = document.getElementById('inpLineType').value;
         const net = getActiveNetwork();
         const fromSel = document.getElementById('inpFromNode');
+        const dtSelectorBox = document.getElementById('ltLineDTSelector');
         
-        // Retain currently selected value if possible
-        const currentSelected = fromSel.value; 
-
         if (type.includes('LT')) {
-            // LT line must connect from DT or LT pole
-            let opts = net.dts.map(d => `<option value="${d.code}" ${currentSelected==d.code?'selected':''}>DT: ${d.code}</option>`).join('');
-            net.poles.filter(p => p.lineType === 'LT').forEach(p => { opts += `<option value="${p.poleNo}" ${currentSelected==p.poleNo?'selected':''}>LT Pole: ${p.poleNo}</option>`; });
+            dtSelectorBox.style.display = 'block';
+            const selectedDT = document.getElementById('inpTargetDT').value;
+            if(!selectedDT) return;
+            
+            // For LT Line: From can ONLY be the selected DT, or LT poles explicitly attached to that DT
+            let opts = `<option value="${selectedDT}">DT: ${selectedDT}</option>`;
+            net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT).forEach(p => { 
+                opts += `<option value="${p.poleNo}">LT Pole: ${p.poleNo}</option>`; 
+            });
             fromSel.innerHTML = opts;
         } else {
+            dtSelectorBox.style.display = 'none';
             // 11kV or 33kV line connects from GSS or HT poles
-            let opts = `<option value="${net.gss.code}" ${currentSelected==net.gss.code?'selected':''}>GSS (${net.gss.code})</option>`;
-            net.poles.filter(p => p.lineType !== 'LT').forEach(p => { opts += `<option value="${p.poleNo}" ${currentSelected==p.poleNo?'selected':''}>Pole ${p.poleNo}</option>`; });
+            let opts = `<option value="${net.gss.code}">GSS (${net.gss.code})</option>`;
+            net.poles.filter(p => p.lineType !== 'LT').forEach(p => { opts += `<option value="${p.poleNo}">Pole ${p.poleNo}</option>`; });
             fromSel.innerHTML = opts;
         }
         syncLineToSelect();
@@ -757,9 +827,15 @@
         const fromVal = document.getElementById('inpFromNode').value, toSel = document.getElementById('inpToNode');
         const net = getActiveNetwork(); let opts = '';
         if (type.includes('LT')) {
-            net.poles.filter(p => p.lineType === 'LT' && p.poleNo != fromVal).forEach(p => { opts += `<option value="${p.poleNo}">LT Pole: ${p.poleNo}</option>`; });
+            const selectedDT = document.getElementById('inpTargetDT').value;
+            // Target can only be LT poles attached to the same DT
+            net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT && p.poleNo != fromVal).forEach(p => { 
+                opts += `<option value="${p.poleNo}">LT Pole: ${p.poleNo}</option>`; 
+            });
         } else {
-            net.poles.filter(p => p.poleNo != fromVal).forEach(p => { opts += `<option value="${p.poleNo}">Pole ${p.poleNo}</option>`; });
+            net.poles.filter(p => p.lineType !== 'LT' && p.poleNo != fromVal).forEach(p => { 
+                opts += `<option value="${p.poleNo}">Pole ${p.poleNo}</option>`; 
+            });
         }
         toSel.innerHTML = opts; 
     }
@@ -773,7 +849,21 @@
         const net = getActiveNetwork(); 
         if (net.poles.some(p => p.poleNo == no)) return alert(`Pole exists!`); 
         net.poles.push({ id: 'P_'+Date.now(), poleNo: no, lineType: category, lat, lng }); 
-        closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Pole added successfully!");
+        closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("HT Pole added successfully!");
+    }
+
+    function saveNewLTPole() {
+        saveSnapshot(); 
+        const no = document.getElementById('inpPoleNo').value.trim(); 
+        const category = document.getElementById('inpPoleCategory').value;
+        const dtCode = document.getElementById('inpLTPoleDT').value;
+        const lat = parseFloat(document.getElementById('inpLat').value), lng = parseFloat(document.getElementById('inpLng').value); 
+        if (!no || !dtCode) return alert("Enter pole number and select DT"); 
+        const net = getActiveNetwork(); 
+        if (net.poles.some(p => p.poleNo == no)) return alert(`Pole exists!`); 
+        // Store dtCode to permanently link this LT pole to its parent DT
+        net.poles.push({ id: 'P_'+Date.now(), poleNo: no, lineType: category, dtCode: dtCode, lat, lng }); 
+        closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("LT Pole added successfully!");
     }
 
     function saveNewLine() { 
@@ -827,123 +917,58 @@
         closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Consumer added successfully!");
     }
 
-    function openResetConfirmationModal() {
-        openModal(`<div class="sheet-head"><div class="sheet-title" style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Reset Data</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-            <div class="form-row"><label>Type <b>"RESET"</b> to clear all feeder survey data</label><input type="text" id="inpResetText" class="form-input"></div>
-            <button class="btn-action-primary" style="background:#dc2626;" onclick="executeFeederReset()">Confirm Delete</button>`);
-    }
-    function executeFeederReset() { 
-        if (document.getElementById('inpResetText').value.trim() !== "RESET") return alert("Type RESET to confirm"); 
-        const net = getActiveNetwork(); net.poles=[]; net.dts=[]; net.lines=[]; net.consumers=[]; 
-        closeModal(); closeSettingsPage(); renderEntireNetwork(); triggerPersistence(); showToast("All data cleared!");
-    }
-
-    let liveTrackingId = null; let liveLocMarker = null;
-    function toggleLiveTracking() {
-        const btn = document.getElementById('liveTrackBtn');
-        if (liveTrackingId) { navigator.geolocation.clearWatch(liveTrackingId); liveTrackingId = null; if (liveLocMarker) map.removeLayer(liveLocMarker); liveLocMarker = null; btn.innerHTML = '<i class="fa-solid fa-crosshairs" style="color:#ef4444;"></i>'; } 
-        else {
-            if (!navigator.geolocation) return; btn.innerHTML = '<i class="fa-solid fa-crosshairs" style="color:#10b981;"></i>';
-            liveTrackingId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude, lng = pos.coords.longitude;
-                    if (!liveLocMarker) { liveLocMarker = L.marker([lat, lng]).addTo(map); map.flyTo([lat, lng], 19); } 
-                    else liveLocMarker.setLatLng([lat, lng]);
-                }, (err) => { toggleLiveTracking(); }, { enableHighAccuracy: true, timeout: 12000 }
-            );
-        }
-    }
-
     /* ====== 2. FIXED EXPORT TO FOLDER (SAVE AS) ====== */
     async function smartExportAskLocation(filename, dataBlobOrText, mimeType) {
         const blob = dataBlobOrText instanceof Blob ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
 
-        // 1. Desktop File System Access API
         if (window.showSaveFilePicker) {
             try {
-                const handle = await window.showSaveFilePicker({
-                    suggestedName: filename,
-                    types: [{ description: 'Export File', accept: { [mimeType]: ['.csv', '.kml', '.dxf', '.pdf'] } }]
-                });
+                const handle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Export File', accept: { [mimeType]: ['.csv', '.kml', '.dxf', '.pdf'] } }] });
                 const writable = await handle.createWritable();
-                await writable.write(blob);
-                await writable.close();
+                await writable.write(blob); await writable.close();
                 showToast("✅ Exported to chosen folder successfully!");
                 return;
-            } catch (err) {
-                if (err.name !== 'AbortError') console.error(err);
-                return;
-            }
+            } catch (err) { return; }
         }
 
-        // 2. Mobile Android / Web Share API
         const file = new File([blob], filename, { type: mimeType });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({ title: filename, files: [file] });
-                showToast("✅ File shared/exported successfully!");
-                return;
-            } catch (err) { console.error(err); }
+            try { await navigator.share({ title: filename, files: [file] }); showToast("✅ File shared/exported successfully!"); return; } catch (err) {}
         }
 
-        // 3. Fallback Standard Web Download
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = filename;
-        document.body.appendChild(a); a.click();
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
         showToast("✅ Downloaded to device Downloads folder!");
     }
 
     function getCSVString() {
-        const net = getActiveNetwork();
-        let csv = "\uFEFFWKT,Name,Type,ParentNode,Details\n"; 
-        if (net.gss && net.gss.lat) {
-            csv += `"POINT (${net.gss.lng} ${net.gss.lat})","${net.gss.name}","GSS","","Code: ${net.gss.code}"\n`;
-        }
-        net.poles.forEach(p => {
-            csv += `"POINT (${p.lng} ${p.lat})","Pole ${p.poleNo}","POLE","${p.poleNo}","Type: ${p.lineType}"\n`;
-        });
-        net.dts.forEach(d => {
-            csv += `"POINT (${d.lng} ${d.lat})","DT ${d.code}","DT","${d.parentPole}","Rating: ${d.rating}kVA"\n`;
-        });
-        net.consumers.forEach(c => {
-            csv += `"POINT (${c.lng} ${c.lat})","${c.name}","CONSUMER","${c.parentRef}","KNo: ${c.kno}"\n`;
-        });
-        net.lines.forEach(l => {
-            if (l.coords && l.coords.length === 2) {
-                csv += `"LINESTRING (${l.coords[0][1]} ${l.coords[0][0]}, ${l.coords[1][1]} ${l.coords[1][0]})","${l.type}","LINE","${l.fromNode} ➔ ${l.toNode}","Dist: ${(l.distanceMeters||0).toFixed(1)}m"\n`;
-            }
-        });
+        const net = getActiveNetwork(); let csv = "\uFEFFWKT,Name,Type,ParentNode,Details\n"; 
+        if (net.gss && net.gss.lat) csv += `"POINT (${net.gss.lng} ${net.gss.lat})","${net.gss.name}","GSS","","Code: ${net.gss.code}"\n`;
+        net.poles.forEach(p => csv += `"POINT (${p.lng} ${p.lat})","Pole ${p.poleNo}","POLE","${p.dtCode||p.poleNo}","Type: ${p.lineType}"\n`);
+        net.dts.forEach(d => csv += `"POINT (${d.lng} ${d.lat})","DT ${d.code}","DT","${d.parentPole}","Rating: ${d.rating}kVA"\n`);
+        net.consumers.forEach(c => csv += `"POINT (${c.lng} ${c.lat})","${c.name}","CONSUMER","${c.parentRef}","KNo: ${c.kno}"\n`);
+        net.lines.forEach(l => { if (l.coords && l.coords.length === 2) csv += `"LINESTRING (${l.coords[0][1]} ${l.coords[0][0]}, ${l.coords[1][1]} ${l.coords[1][0]})","${l.type}","LINE","${l.fromNode} ➔ ${l.toNode}","Dist: ${(l.distanceMeters||0).toFixed(1)}m"\n`; });
         return csv;
     }
 
-    function exportDataToCSV() { 
-        toggleSidebar(false); 
-        const filename = `${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}_GE.csv`;
-        smartExportAskLocation(filename, getCSVString(), "text/csv;charset=utf-8;"); 
-    }
+    function exportDataToCSV() { toggleSidebar(false); smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}_GE.csv`, getCSVString(), "text/csv;charset=utf-8;"); }
 
     function exportToAutoCAD_DXF() { 
         toggleSidebar(false); let dxf = "0\nSECTION\n2\nENTITIES\n"; 
         getActiveNetwork().lines.forEach(l => { if (l.coords && l.coords[0] && l.coords[1]) dxf += `0\nLINE\n8\n${l.type.replace(/\s+/g,'_')}\n10\n${l.coords[0][1]}\n20\n${l.coords[0][0]}\n30\n0\n11\n${l.coords[1][1]}\n21\n${l.coords[1][0]}\n31\n0\n`; }); 
-        dxf += "0\nENDSEC\n0\nEOF\n"; 
-        smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.dxf`, dxf, "application/dxf"); 
+        dxf += "0\nENDSEC\n0\nEOF\n"; smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.dxf`, dxf, "application/dxf"); 
     }
     
     function exportToGoogleEarth_KML() { 
         toggleSidebar(false); let kml = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${getActiveNetwork().feeder.name}</name>`; 
         getActiveNetwork().lines.forEach(l => { if (l.coords && l.coords[0] && l.coords[1]) kml += `<Placemark><name>${l.type}</name><LineString><coordinates>${l.coords[0][1]},${l.coords[0][0]},0 ${l.coords[1][1]},${l.coords[1][0]},0</coordinates></LineString></Placemark>`; }); 
-        kml += "</Document></kml>"; 
-        smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.kml`, kml, "application/vnd.google-earth.kml+xml"); 
+        kml += "</Document></kml>"; smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.kml`, kml, "application/vnd.google-earth.kml+xml"); 
     }
     
     function generateCadSLDPdf() { 
-        toggleSidebar(false); const net = getActiveNetwork();
-        const pts = [];
+        toggleSidebar(false); const net = getActiveNetwork(); const pts = [];
         if (net.gss && net.gss.lat) pts.push({ lat: net.gss.lat, lng: net.gss.lng });
-        net.poles.forEach(p => pts.push({ lat: p.lat, lng: p.lng }));
-        net.dts.forEach(d => pts.push({ lat: d.lat, lng: d.lng }));
+        net.poles.forEach(p => pts.push({ lat: p.lat, lng: p.lng })); net.dts.forEach(d => pts.push({ lat: d.lat, lng: d.lng }));
         if (pts.length === 0) return alert("No data found");
         let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
         pts.forEach(p => { if(p.lat < minLat) minLat = p.lat; if(p.lat > maxLat) maxLat = p.lat; if(p.lng < minLng) minLng = p.lng; if(p.lng > maxLng) maxLng = p.lng; });
@@ -951,53 +976,25 @@
 
         const canvas = document.getElementById('cad-canvas'); const ctx = canvas.getContext('2d');
         const W = 3508, H = 2480; canvas.width = W; canvas.height = H;
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
-        ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 10; ctx.strokeRect(40, 40, W - 80, H - 80);
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H); ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 10; ctx.strokeRect(40, 40, W - 80, H - 80);
         ctx.fillStyle = "#0f172a"; ctx.font = "bold 50px Arial"; ctx.fillText(`SLD: ${net.feeder.name.toUpperCase()}`, 80, 120);
 
-        const padX = 200, padY = 250, usableW = W - (padX * 2), usableH = H - (padY * 2);
-        const scale = Math.min(usableW / dLng, usableH / dLat);
+        const padX = 200, padY = 250, usableW = W - (padX * 2), usableH = H - (padY * 2), scale = Math.min(usableW / dLng, usableH / dLat);
         const xOff = padX + (usableW - (dLng * scale)) / 2, yOff = padY + (usableH - (dLat * scale)) / 2;
-        const toX = (lng) => xOff + ((lng - minLng) * scale);
-        const toY = (lat) => H - (yOff + ((lat - minLat) * scale));
+        const toX = (lng) => xOff + ((lng - minLng) * scale), toY = (lat) => H - (yOff + ((lat - minLat) * scale));
 
-        net.lines.forEach(l => {
-            if(!l.coords || l.coords.length < 2) return; const spec = getLineSpec(l.type);
-            ctx.lineWidth = spec.weight * 2; ctx.strokeStyle = spec.color;
-            ctx.beginPath(); ctx.moveTo(toX(l.coords[0][1]), toY(l.coords[0][0])); ctx.lineTo(toX(l.coords[1][1]), toY(l.coords[1][0])); ctx.stroke();
-        });
-
-        net.poles.forEach(p => {
-            const dx = toX(p.lng), dy = toY(p.lat);
-            ctx.beginPath(); ctx.arc(dx, dy, 8, 0, 2 * Math.PI); ctx.fillStyle = "#fde047"; ctx.fill(); ctx.stroke();
-        });
+        net.lines.forEach(l => { if(!l.coords || l.coords.length < 2) return; const spec = getLineSpec(l.type); ctx.lineWidth = spec.weight * 2; ctx.strokeStyle = spec.color; ctx.beginPath(); ctx.moveTo(toX(l.coords[0][1]), toY(l.coords[0][0])); ctx.lineTo(toX(l.coords[1][1]), toY(l.coords[1][0])); ctx.stroke(); });
+        net.poles.forEach(p => { const dx = toX(p.lng), dy = toY(p.lat); ctx.beginPath(); ctx.arc(dx, dy, 8, 0, 2 * Math.PI); ctx.fillStyle = "#fde047"; ctx.fill(); ctx.stroke(); });
 
         const { jsPDF } = window.jspdf; const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
-        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, 420, 297);
-        smartExportAskLocation(`${net.feeder.name.replace(/\s+/g, '_')}_SLD.pdf`, pdf.output('blob'), "application/pdf");
+        pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, 420, 297); smartExportAskLocation(`${net.feeder.name.replace(/\s+/g, '_')}_SLD.pdf`, pdf.output('blob'), "application/pdf");
     }
 
-    function handleImportChoice(e) { 
-        const f = e.target.files[0]; if(!f) return; const r = new FileReader(); 
-        r.onload = ev => { try { const p = JSON.parse(ev.target.result); if(p.feeders) appState = p; renderEntireNetwork(); triggerPersistence(); showToast("Imported!"); } catch(err) { alert("Invalid File"); } }; 
-        r.readAsText(f); e.target.value = ''; 
-    }
+    function handleImportChoice(e) { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ev => { try { const p = JSON.parse(ev.target.result); if(p.feeders) appState = p; renderEntireNetwork(); triggerPersistence(); showToast("Imported!"); } catch(err) { alert("Invalid File"); } }; r.readAsText(f); e.target.value = ''; }
+    function handleCredentialResponse(response) { if(response.credential) showToast("Google Login Success!"); }
 
-    function handleCredentialResponse(response) {
-        if(response.credential) { showToast("Google Login Success!"); }
-    }
-
-    function initializeApplication() { 
-        loadPersistedData(() => { 
-            setTimeout(() => { 
-                const splash = document.getElementById('splash-screen');
-                if(splash) splash.classList.add('hidden'); 
-            }, 1800);
-            renderEntireNetwork(); 
-        }); 
-    }
-    document.addEventListener('deviceready', initializeApplication, false); 
-    window.addEventListener('DOMContentLoaded', () => { if (!window.cordova) initializeApplication(); });
+    function initializeApplication() { loadPersistedData(() => { setTimeout(() => { const splash = document.getElementById('splash-screen'); if(splash) splash.classList.add('hidden'); }, 1800); renderEntireNetwork(); }); }
+    document.addEventListener('deviceready', initializeApplication, false); window.addEventListener('DOMContentLoaded', () => { if (!window.cordova) initializeApplication(); });
 </script>
 </body>
 </html>
