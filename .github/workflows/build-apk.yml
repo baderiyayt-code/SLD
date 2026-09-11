@@ -19,7 +19,13 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # यह स्टेप Gradle 8.4 को इनस्टॉल करेगा जो Cordova के साथ 100% कम्पैटिबल है
+      # नया स्टेप: Android Build Tools 33.0.2 इनस्टॉल करने के लिए
+      - name: Setup Android SDK (Build Tools 33.0.2)
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
+
+      # Cordova के लिए सही Gradle 8.4 वर्ज़न
       - name: Setup Gradle 8.4
         uses: gradle/actions/setup-gradle@v3
         with:
