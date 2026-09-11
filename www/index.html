@@ -88,18 +88,18 @@
         #app-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e293b; color: #ffffff; padding: 12px 20px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; box-shadow: var(--shadow-md); z-index: 5000; opacity: 0; transition: all 0.3s; display: flex; align-items: center; gap: 10px; width: max-content; max-width: 90%; }
         #app-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        /* ====== ICONS & Z-INDEX LOGIC ====== */
-        .gss-square-icon { background: #b91c1c; color: white; border: 2px solid white; border-radius: 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4); z-index: 400 !important;}
-        .gss-mini-dot { background: #b91c1c; border-radius: 50%; border: 2px solid white; width: 16px; height: 16px; z-index: 400 !important; }
+        /* ====== ICONS ====== */
+        .gss-square-icon { background: #b91c1c; color: white; border: 2px solid white; border-radius: 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; box-shadow: 0 4px 12px rgba(185, 28, 28, 0.4);}
+        .gss-mini-dot { background: #b91c1c; border-radius: 50%; border: 2px solid white; width: 16px; height: 16px; }
 
-        .pole-marker-icon { background: #fde047; color: #0f172a; border: 2.5px solid #0f172a; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); width: 26px; height: 26px; z-index: 500 !important;}
+        .pole-marker-icon { background: #fde047; color: #0f172a; border: 2.5px solid #0f172a; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.4); width: 26px; height: 26px;}
         .pole-marker-icon.orphan-pulse { background: #ef4444 !important; color: white !important; border-color: white !important; animation: redGlow 1s infinite !important; }
         
-        .dt-square-icon { background: #f59e0b; color: white; border: 1.5px solid white; border-radius: 6px; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4); z-index: 600 !important;}
+        .dt-square-icon { background: #f59e0b; color: white; border: 1.5px solid white; border-radius: 6px; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4);}
         
-        .lt-pole-icon { background: #10b981; color: white; border: 2px solid white; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 22px; height: 22px; z-index: 700 !important;}
+        .lt-pole-icon { background: #10b981; color: white; border: 2px solid white; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 22px; height: 22px;}
         
-        .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5); z-index: 800 !important;}
+        .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5);}
         
         @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
@@ -327,7 +327,7 @@
         if (historyStack.length > 15) historyStack.shift();
     }
 
-    /* GLOBAL WINDOW ATTACHMENT FOR POPUP BUTTONS */
+    /* GLOBAL WINDOW ATTACHMENT FOR HTML POPUP BUTTONS */
     window.undoLastAction = function() {
         if (historyStack.length === 0) return showToast("No actions to Undo!");
         const prevState = historyStack.pop(); const net = getActiveNetwork();
@@ -448,12 +448,15 @@
         document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    // Leaflet Panes for Z-Index Control (Consumer > LT Pole > LT Line > DT > HT Pole > GSS)
+    // MAP Z-INDEX HIERARCHY SETUP: Ensure lines are below icons
+    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 200;  // Lines at the bottom
+    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 250;
+    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 260;
+    
+    // Icons at the top
     map.createPane('gssPane'); map.getPane('gssPane').style.zIndex = 400;
     map.createPane('htPolePane'); map.getPane('htPolePane').style.zIndex = 450;
     map.createPane('dtPane'); map.getPane('dtPane').style.zIndex = 500;
-    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 550;
-    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 560;
     map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 600;
     map.createPane('consumerPane'); map.getPane('consumerPane').style.zIndex = 700;
 
@@ -479,7 +482,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center;"><b>Poles</b><label><input type="checkbox" id="fltPoles" ${f.poles?'checked':''}></label></div>
                 <div style="display:flex; justify-content:space-between; align-items:center;"><b>DT</b><label><input type="checkbox" id="fltDTs" ${f.dts?'checked':''}></label></div>
                 <div style="display:flex; justify-content:space-between; align-items:center;"><b>Consumers</b><label><input type="checkbox" id="fltCons" ${f.consumers?'checked':''}></label></div>
-            </div><button class="btn-action-primary" onclick="saveFilters()">Apply</button>`);
+            </div><button class="btn-action-primary" onclick="window.saveFilters()">Apply</button>`);
     }
     window.saveFilters = function() {
         appState.filters.lines11 = document.getElementById('flt11').checked; appState.filters.lines33 = document.getElementById('flt33').checked; appState.filters.linesLT = document.getElementById('fltLT').checked;
@@ -546,14 +549,13 @@
                     const iconClass = isLT ? 'lt-pole-icon' : 'pole-marker-icon';
                     const pane = isLT ? 'ltPolePane' : 'htPolePane';
 
-                    // For LT poles, show only the unique number part (after the hyphen) in the icon
+                    // LT Pole short numbering (hide DT Code part visually)
                     let displayNo = p.poleNo;
                     if (isLT && String(p.poleNo).includes('-')) {
                         displayNo = String(p.poleNo).split('-')[1];
                     }
 
                     const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: iconClass + (isOrphan ? ' orphan-pulse' : ''), html: `<span>${displayNo}</span>`, iconSize: [isLT?22:26, isLT?22:26], iconAnchor: [isLT?11:13, isLT?11:13] }), pane: pane });
-                    
                     m.bindPopup(`<div style="padding:4px;"><b>Pole: ${p.poleNo} (${p.lineType || 'HT'})</b><p style="margin:4px 0; font-size:0.8rem;">Parent: ${p.dtCode || 'Feeder'}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#eff6ff; border:none; border-radius:6px;" onclick="window.openEditModal('pole','${p.id}')">Edit</button><button style="flex:1; padding:8px; background:#fef3c7; border:none; border-radius:6px;" onclick="window.startObjectMove('POLE','${p.id}','${p.poleNo}')">Move</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="window.deleteEntity('pole','${p.id}')">Delete</button></div></div>`);
                     featureGroups.poles.addLayer(m);
                 });
@@ -590,7 +592,8 @@
                     }
 
                     if (f.poles && currentZoom >= 16) { 
-                        L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#3b82f6', weight: 1, dashArray: '2,4', pane: 'consumerPane' }).addTo(featureGroups.consumerLines); 
+                        // Dotted line connecting consumer to parent
+                        L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#3b82f6', weight: 1, dashArray: '2,4', pane: 'bgLinesPane' }).addTo(featureGroups.consumerLines); 
                     }
                     
                     const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: 'consumer-marker-icon', html: `<i class="fa-solid fa-house"></i>`, iconSize: [18,18], iconAnchor: [9,9] }), pane: 'consumerPane' });
@@ -774,7 +777,6 @@
                 window.filterLineNodes(); 
             }, 30);
         } else if (type === 'DT') {
-            // STRICT DT PARENTING: Only HT Poles or GSS
             const parentOpts = `<option value="${net.feeder.code}">Feeder Root (${net.feeder.code})</option>` + net.poles.filter(p => p.lineType !== 'LT').map(p => `<option value="${p.poleNo}">HT Pole ${p.poleNo}</option>`).join('');
             openModal(`<div class="sheet-head"><div class="sheet-title">Add DT</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Connected To (Parent)*</label><select id="inpDTParent" class="form-select">${parentOpts}</select></div>
@@ -871,7 +873,6 @@
         if (!dtCode) return alert("Select DT"); 
         
         const net = getActiveNetwork(); 
-        // Unique Sequential Numbering for LT Pole (e.g. 4501-1, 4501-2)
         const existingLTPoles = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == dtCode);
         const nextSequence = existingLTPoles.length + 1;
         const finalPoleNo = `${dtCode}-${nextSequence}`;
@@ -960,7 +961,7 @@
         }
     }
 
-    /* ====== 2. FIXED EXPORT TO FOLDER (SAVE AS) - LOCAL SYSTEM ONLY ====== */
+    /* ====== 2. FIXED LOCAL FILE EXPORT (SAVE AS) ====== */
     async function smartExportAskLocation(filename, dataBlobOrText, mimeType) {
         const blob = dataBlobOrText instanceof Blob ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
 
@@ -981,10 +982,16 @@
             } catch (err) { return; }
         }
 
-        // 3. Absolute Fallback Standard Download (Browser)
-        const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename;
-        document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-        showToast("✅ Downloaded to device folder!");
+        // 3. Absolute Fallback: Standard browser download (100% works locally)
+        const url = URL.createObjectURL(blob); 
+        const a = document.createElement("a"); 
+        a.style.display = 'none';
+        a.href = url; 
+        a.download = filename;
+        document.body.appendChild(a); 
+        a.click(); 
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast("✅ Downloaded to device Downloads folder!");
     }
 
     window.getCSVString = function() {
