@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#1e293b">
+    <meta name="theme-color" content="#1e3a8a">
     <title>DISCOM Survey Pro</title>
 
     <script src="cordova.js"></script>
@@ -19,7 +19,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
 
         :root {
             --bg-base: #f8fafc; --bg-glass: rgba(255, 255, 255, 0.92); --bg-sheet: #ffffff;
@@ -33,6 +33,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-main); }
         #app-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+        /* ====== SPLASH SCREEN (ANIMATED) ====== */
+        #splash-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #2563eb); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: opacity 0.6s ease, transform 0.6s ease; }
+        #splash-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
+        .splash-logo { width: 100px; height: 100px; background: white; color: #2563eb; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: pulse 2s infinite; }
+        .splash-title { font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 6px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .splash-subtitle { font-size: 1rem; color: #93c5fd; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; }
+        .splash-loader { margin-top: 40px; width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(255,255,255,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* ====== TOP HEADER & DASHBOARD ====== */
         #top-bar { position: absolute; top: env(safe-area-inset-top, 10px); left: 12px; right: 12px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
@@ -132,6 +142,15 @@
 <body>
 
 <div id="app-container">
+    
+    <!-- SPLASH SCREEN (ANIMATED) -->
+    <div id="splash-screen">
+        <div class="splash-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
+        <h1 class="splash-title">DISCOM Pro</h1>
+        <p class="splash-subtitle" data-i18n="app_sub">Enterprise Survey App</p>
+        <div class="splash-loader"></div>
+    </div>
+
     <div id="app-toast"><i class="fa-solid fa-circle-check" style="color:#4ade80;"></i> <span id="toast-msg">Success</span></div>
 
     <!-- TOP BAR -->
@@ -190,7 +209,7 @@
     </div>
 </div>
 
-<!-- SETTINGS PAGE (AUTO SAVE) -->
+<!-- SETTINGS PAGE -->
 <div id="settings-page">
     <div class="settings-header">
         <button class="action-btn-sm" style="border:none; background:transparent; font-size:1.3rem;" onclick="closeSettingsPage()"><i class="fa-solid fa-arrow-left"></i></button>
@@ -198,17 +217,6 @@
     </div>
     <div class="settings-body">
         
-        <div class="settings-card">
-            <div class="form-row" style="margin-bottom:0;">
-                <label data-i18n="exp_path">Export Path</label>
-                <select id="setExportPath" class="form-select" onchange="autoSaveSettings()">
-                    <option value="DOWNLOADS" selected>📁 Downloads Folder</option>
-                    <option value="APP_DOCUMENTS">🔒 App Storage</option>
-                    <option value="BROWSER_SHARE">🌐 Direct Download</option>
-                </select>
-            </div>
-        </div>
-
         <div class="settings-card">
             <div class="form-row" style="margin-bottom:0;">
                 <label data-i18n="lang">Language</label>
@@ -265,7 +273,7 @@
         <div class="menu-link-btn" onclick="generateCadSLDPdf()"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> <span data-i18n="exp_pdf">Export PDF</span></div>
         <div class="menu-link-btn" onclick="exportToAutoCAD_DXF()"><i class="fa-solid fa-draw-polygon" style="color:#10b981;"></i> <span data-i18n="exp_dxf">Export DXF</span></div>
         <div class="menu-link-btn" onclick="exportToGoogleEarth_KML()"><i class="fa-solid fa-earth-americas" style="color:#0ea5e9;"></i> <span data-i18n="exp_kml">Export KML</span></div>
-        <div class="menu-link-btn" onclick="exportDataToCSV()"><i class="fa-solid fa-file-csv" style="color:#f59e0b;"></i> <span data-i18n="exp_csv">Export CSV</span></div>
+        <div class="menu-link-btn" onclick="exportDataToCSV()"><i class="fa-solid fa-file-csv" style="color:#f59e0b;"></i> <span data-i18n="exp_csv">Export CSV (GE Ready)</span></div>
 
         <div class="menu-category-title" data-i18n="menu_imp">Import</div>
         <label class="menu-link-btn">
@@ -286,7 +294,7 @@
     const DB_KEY = "DISCOM_ENTERPRISE_DB";
     
     let appState = {
-        settings: { checkOrphanNode: true, language: 'en', exportPath: 'DOWNLOADS', gpsInterval: 3, gpsDistance: 2 },
+        settings: { checkOrphanNode: true, language: 'en', gpsInterval: 3, gpsDistance: 2 },
         user: { isLoggedIn: false, name: "", email: "", photoUrl: "" },
         filters: { lines33: true, lines11: true, linesLT: true, poles: true, dts: true, consumers: true },
         currentFeederCode: "FDR-01",
@@ -296,14 +304,14 @@
 
     let historyStack = [];
 
-    // TRANSLATION DICTIONARY
     const dict = {
         en: {
+            "app_sub": "Enterprise Survey App",
             "kpi_line": "11 KV Line", "kpi_load": "Total Load", "kpi_dt": "Transformers", "kpi_cons": "Consumers",
             "search_ph": "Search ID...", "add_pole": "Pole", "add_line": "Line", "add_dt": "DT", "add_cons": "Consumer",
             "settings": "Settings", "lang": "Language", "gps_trk": "Smart GPS Tracking", "gps_int": "Interval (Sec)", "gps_dist": "Distance (m)",
-            "orphan": "Orphan Check", "exp_path": "Export Path", "reset": "Reset Data",
-            "fdr_cfg": "Feeder Config", "exp_pdf": "Export PDF", "exp_dxf": "Export DXF", "exp_kml": "Export KML", "exp_csv": "Export CSV", "imp_data": "Import Data",
+            "orphan": "Orphan Check", "reset": "Reset Data",
+            "fdr_cfg": "Feeder Config", "exp_pdf": "Export PDF", "exp_dxf": "Export DXF", "exp_kml": "Export KML", "exp_csv": "Export CSV (GE Ready)", "imp_data": "Import Data",
             "btn_set": "Set Here", "btn_cancel": "Cancel",
             "loc": "Location", "pole": "Pole No", "code": "Code", "name": "Name", "kno": "K-No", "load": "Load", "type": "Type",
             "edit": "Edit", "del": "Delete", "move": "Move", "dist": "Distance", "dir": "Direction",
@@ -312,11 +320,12 @@
             "menu_exp": "Export", "menu_imp": "Import", "menu_sys": "System", "no_data": "No Data Found", "same_node_err": "Cannot connect to same node!"
         },
         hi: {
+            "app_sub": "एंटरप्राइज सर्वे ऐप",
             "kpi_line": "11 KV लाइन", "kpi_load": "कुल लोड", "kpi_dt": "ट्रांसफार्मर", "kpi_cons": "उपभोक्ता",
             "search_ph": "आईडी खोजें...", "add_pole": "खंभा", "add_line": "लाइन", "add_dt": "डी.टी.", "add_cons": "उपभोक्ता",
             "settings": "सेटिंग्स", "lang": "भाषा", "gps_trk": "GPS ट्रैकिंग", "gps_int": "समय (Sec)", "gps_dist": "दूरी (m)",
-            "orphan": "कटे पोल चेक", "exp_path": "एक्सपोर्ट पाथ", "reset": "डेटा रीसेट",
-            "fdr_cfg": "फीडर सेटिंग्स", "exp_pdf": "PDF डाउनलोड", "exp_dxf": "DXF डाउनलोड", "exp_kml": "KML डाउनलोड", "exp_csv": "CSV डाउनलोड", "imp_data": "डेटा लोड करें",
+            "orphan": "कटे पोल चेक", "reset": "डेटा रीसेट",
+            "fdr_cfg": "फीडर सेटिंग्स", "exp_pdf": "PDF डाउनलोड", "exp_dxf": "DXF डाउनलोड", "exp_kml": "KML डाउनलोड", "exp_csv": "CSV डाउनलोड (GE Ready)", "imp_data": "डेटा लोड करें",
             "btn_set": "यहाँ सेट करें", "btn_cancel": "रद्द करें",
             "loc": "लोकेशन", "pole": "पोल नंबर", "code": "कोड", "name": "नाम", "kno": "K-नंबर", "load": "लोड", "type": "प्रकार",
             "edit": "एडिट", "del": "डिलीट", "move": "मूव", "dist": "दूरी", "dir": "दिशा",
@@ -348,10 +357,8 @@
     async function loadPersistedData(callback) {
         try { const data = await localforage.getItem(DB_KEY); if (data && data.feeders) appState = data; else { const lsData = localStorage.getItem(DB_KEY); if(lsData) appState = JSON.parse(lsData); } } catch(e) {}
         
-        // Initial setup for settings
         document.getElementById('setLanguage').value = appState.settings.language || 'en';
         document.getElementById('setOrphan').checked = appState.settings.checkOrphanNode;
-        document.getElementById('setExportPath').value = appState.settings.exportPath || 'DOWNLOADS';
         document.getElementById('setGpsInterval').value = appState.settings.gpsInterval || 3;
         document.getElementById('setGpsDistance').value = appState.settings.gpsDistance || 2;
         
@@ -371,12 +378,10 @@
         renderEntireNetwork(); triggerPersistence(); showToast("Undo Successful ↺");
     }
 
-    // AUTO SAVE SETTINGS
     function autoSaveSettings() {
         const lang = document.getElementById('setLanguage').value;
         appState.settings.language = lang;
         appState.settings.checkOrphanNode = document.getElementById('setOrphan').checked;
-        appState.settings.exportPath = document.getElementById('setExportPath').value;
         appState.settings.gpsInterval = parseFloat(document.getElementById('setGpsInterval').value) || 3;
         appState.settings.gpsDistance = parseFloat(document.getElementById('setGpsDistance').value) || 2;
         applyLanguage(lang); triggerPersistence(); renderEntireNetwork(); showToast(t('saved'));
@@ -389,7 +394,6 @@
         document.getElementById('moveTargetTitle').innerText = t('target') || "Target";
     }
 
-    // MINI SEARCH FOR SELECT OPTIONS
     function searchSelectOptions(inputElem, selectId) {
         const query = inputElem.value.toLowerCase(); const select = document.getElementById(selectId); if(!select) return;
         if (!select.hasAttribute('data-original-html')) select.setAttribute('data-original-html', select.innerHTML);
@@ -407,13 +411,10 @@
     function toggleSidebar(open) { document.getElementById('sidebar-drawer').classList.toggle('open', open); document.getElementById('sidebarBackdrop').classList.toggle('open', open); }
     function openModal(html) { document.getElementById('modalSheetContent').innerHTML = html; document.getElementById('formModalOverlay').classList.add('open'); }
     function closeModal() { document.getElementById('formModalOverlay').classList.remove('open'); }
-
     function openSettingsPage() { toggleSidebar(false); document.getElementById('settings-page').classList.add('open'); }
     function closeSettingsPage() { document.getElementById('settings-page').classList.remove('open'); }
 
-    function switchFeeder(code) {
-        if (appState.feeders[code]) { appState.currentFeederCode = code; renderEntireNetwork(); triggerPersistence(); const net = getActiveNetwork(); if (net.gss && net.gss.lat) map.flyTo([net.gss.lat, net.gss.lng], 16); }
-    }
+    function switchFeeder(code) { if (appState.feeders[code]) { appState.currentFeederCode = code; renderEntireNetwork(); triggerPersistence(); const net = getActiveNetwork(); if (net.gss && net.gss.lat) map.flyTo([net.gss.lat, net.gss.lng], 16); } }
 
     function getLineSpec(type) {
         const t = (type || '').toUpperCase();
@@ -430,11 +431,7 @@
     }
 
     function formatDistance(meters) { return `${meters.toFixed(1)} M`; }
-
-    function getNodeCoords(nodeId) {
-        const net = getActiveNetwork(); if (nodeId === 'GSS') return { lat: net.gss.lat, lng: net.gss.lng };
-        const p = net.poles.find(x => x.poleNo == nodeId); return p ? { lat: p.lat, lng: p.lng } : null;
-    }
+    function getNodeCoords(nodeId) { const net = getActiveNetwork(); if (nodeId === 'GSS') return { lat: net.gss.lat, lng: net.gss.lng }; const p = net.poles.find(x => x.poleNo == nodeId); return p ? { lat: p.lat, lng: p.lng } : null; }
 
     function computeParallelOffset(coords, offsetMeters) {
         if (!coords || coords.length < 2 || offsetMeters === 0) return coords;
@@ -658,9 +655,9 @@
     function openFeederConfigModal() {
         toggleSidebar(false); const net = getActiveNetwork(); const center = map.getCenter(); const clat = net.gss?.lat || center.lat.toFixed(6), clng = net.gss?.lng || center.lng.toFixed(6);
         openModal(`<div class="sheet-head"><div class="sheet-title"><i class="fa-solid fa-tower-broadcast"></i> ${t('fdr_cfg')}</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-            <div class="form-grid-2"><div class="form-row"><label>Subdivision*</label><input type="text" id="cfgSubdivCode" class="form-input" value="${net.feeder.subdivCode || ''}"></div><div class="form-row"><label>GSS Code*</label><input type="text" id="cfgGssCode" class="form-input" value="${net.gss.code || ''}"></div></div>
-            <div class="form-row"><label>GSS Name*</label><input type="text" id="cfgGssName" class="form-input" value="${net.gss.name || ''}"></div>
-            <div class="form-grid-2"><div class="form-row"><label>Feeder Name*</label><input type="text" id="cfgFeederName" class="form-input" value="${net.feeder.name || ''}"></div><div class="form-row"><label>Feeder Code*</label><input type="text" id="cfgFeederCode" class="form-input" value="${net.feeder.code || ''}"></div></div>
+            <div class="form-grid-2"><div class="form-row"><label>Subdivision</label><input type="text" id="cfgSubdivCode" class="form-input" value="${net.feeder.subdivCode || ''}"></div><div class="form-row"><label>GSS Code</label><input type="text" id="cfgGssCode" class="form-input" value="${net.gss.code || ''}"></div></div>
+            <div class="form-row"><label>GSS Name</label><input type="text" id="cfgGssName" class="form-input" value="${net.gss.name || ''}"></div>
+            <div class="form-grid-2"><div class="form-row"><label>Feeder Name</label><input type="text" id="cfgFeederName" class="form-input" value="${net.feeder.name || ''}"></div><div class="form-row"><label>Feeder Code</label><input type="text" id="cfgFeederCode" class="form-input" value="${net.feeder.code || ''}"></div></div>
             <div style="background:#f1f5f9; padding:10px; border-radius:12px; margin-bottom:12px;"><div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span style="font-weight:700;">GSS GPS</span><button type="button" onclick="document.getElementById('cfgGssLat').value=map.getCenter().lat.toFixed(6);document.getElementById('cfgGssLng').value=map.getCenter().lng.toFixed(6);" style="background:white; border:none; padding:4px 8px; border-radius:6px; cursor:pointer;"><i class="fa-solid fa-crosshairs"></i> Target</button></div><div class="form-grid-2"><input type="number" id="cfgGssLat" class="form-input" value="${clat}"><input type="number" id="cfgGssLng" class="form-input" value="${clng}"></div></div>
             <button class="btn-action-primary" onclick="saveFeederConfiguration()"><i class="fa-solid fa-check"></i> Save</button>`);
     }
@@ -678,7 +675,7 @@
             openModal(`<div class="sheet-head"><div class="sheet-title"><i class="fa-solid fa-grip-lines-vertical"></i> ${t('add_pole')}</div><button class="sheet-close-btn" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>${t('pole')} (Digit)*</label><input type="number" id="inpPoleNo" class="form-input" value="${nextNo}" pattern="[0-9]*"></div>
                 <input type="hidden" id="inpLat" value="${snapLat}"><input type="hidden" id="inpLng" value="${snapLng}">
-                <button class="btn-action-primary" onclick="saveNewPole()"><i class="fa-solid fa-map-pin"></i> Save</button>`);
+                <button class="btn-action-primary" onclick="saveNewPole()"><i class="fa-solid fa-check"></i> Save</button>`);
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add poles first!");
             let fromDefault = 'GSS'; if (net.poles.length >= 2) fromDefault = net.poles[net.poles.length - 2].poleNo;
@@ -732,7 +729,7 @@
             <div class="form-row"><label>Type <b>"${fName}"</b> to delete all data</label><input type="text" id="inpTypedFeederName" class="form-input"></div>
             <button class="btn-action-primary" style="background:#dc2626;" onclick="executeFeederReset('${fName}')"><i class="fa-solid fa-trash"></i> Delete</button>`);
     }
-    function executeFeederReset(expectedName) { if (document.getElementById('inpTypedFeederName').value.trim() !== expectedName) return; const net = getActiveNetwork(); net.poles=[]; net.dts=[]; net.lines=[]; net.consumers=[]; net.otherGss=[]; closeModal(); closeSettingsPage(); renderEntireNetwork(); triggerPersistence(); }
+    function executeFeederReset(expectedName) { if (document.getElementById('inpTypedFeederName').value.trim() !== expectedName) return; const net = getActiveNetwork(); net.poles=[]; net.dts=[]; net.lines=[]; net.consumers=[]; closeModal(); closeSettingsPage(); renderEntireNetwork(); triggerPersistence(); }
 
     let liveTrackingId = null; let liveLocMarker = null; let lastGpsPos = null;
     function toggleLiveTracking() {
@@ -753,27 +750,102 @@
         }
     }
 
-    function downloadOrSaveExportFile(filename, dataBlobOrText, mimeType) {
-        const pathChoice = appState.settings.exportPath || 'DOWNLOADS'; const isCordova = Boolean(window.cordova && cordova.file);
-        if (isCordova && pathChoice !== 'BROWSER_SHARE') {
-            let targetDir = cordova.file.dataDirectory; if (pathChoice === 'DOWNLOADS' && cordova.file.externalRootDirectory) targetDir = cordova.file.externalRootDirectory + 'Download/';
-            window.resolveLocalFileSystemURL(targetDir, function (dirEntry) { dirEntry.getFile(filename, { create: true, exclusive: false }, function (fileEntry) { fileEntry.createWriter(function (fw) { fw.onwriteend = function () { if (fw.length === 0) { fw.onwriteend = function() { showToast("Saved: " + filename); }; fw.write(dataBlobOrText instanceof Blob ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType })); } }; fw.truncate(0); }); }, function () { fallbackWebDownload(filename, dataBlobOrText, mimeType); }); }, function () { fallbackWebDownload(filename, dataBlobOrText, mimeType); });
-        } else fallbackWebDownload(filename, dataBlobOrText, mimeType);
-    }
-    function fallbackWebDownload(filename, dataBlobOrText, mimeType) { const blob = dataBlobOrText instanceof Blob ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500); }
+    /* ====== SMART EXPORT SYSTEM (ASK FOLDER / SAVE AS) ====== */
+    async function smartExportAskLocation(filename, dataBlobOrText, mimeType) {
+        const blob = dataBlobOrText instanceof Blob ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
 
+        // Method 1: Desktop Web (File System Access API - Direct Folder Picker)
+        if (window.showSaveFilePicker) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: filename,
+                    types: [{ description: 'Export File', accept: { [mimeType]: ['.csv', '.kml', '.dxf', '.pdf'] } }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                showToast("✅ फाइल चुनी गई जगह पर सेव हो गई!");
+                return;
+            } catch (err) {
+                if (err.name !== 'AbortError') console.error(err);
+                return; // User cancelled
+            }
+        }
+
+        // Method 2: Mobile App / Android (Web Share API - Opens "Save To" Dialog)
+        const file = new File([blob], filename, { type: mimeType });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    title: filename,
+                    text: 'DISCOM Survey Export File',
+                    files: [file]
+                });
+                showToast("✅ एक्सपोर्ट पूरा हुआ!");
+                return;
+            } catch (err) {
+                console.error("Share API Failed:", err);
+            }
+        }
+
+        // Method 3: Fallback (पुराना तरीका - सीधा डाउनलोड फोल्डर में)
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+        showToast("✅ डाउनलोड फोल्डर में सेव हो गया!");
+    }
+
+    /* ====== GOOGLE EARTH COMPATIBLE CSV (WKT FORMAT) ====== */
     function getCSVString() {
-        const net = getActiveNetwork(); let csv = "\uFEFF[POLES]\nPoleNo,Latitude,Longitude\n"; net.poles.forEach(p => { csv += `"${p.poleNo}",${p.lat},${p.lng}\n`; });
-        csv += "\n[LINES]\nLineType,FromNode,ToNode,DistanceMeters\n"; net.lines.forEach(l => { csv += `"${l.type}","${l.fromNode}","${l.toNode}",${(l.distanceMeters || 0).toFixed(1)}\n`; });
-        csv += "\n[TRANSFORMERS]\nDTCode,PoleNo,RatingKVA,Location,Latitude,Longitude\n"; net.dts.forEach(d => { csv += `"${d.code}","${d.poleNo}","${d.rating}","${d.location||''}",${d.lat},${d.lng}\n`; });
-        csv += "\n[CONSUMERS]\nName,KNumber,ConnectedPole,Load,Latitude,Longitude\n"; net.consumers.forEach(c => { csv += `"${c.name}","${c.kno}","${c.poleNo}","${c.load}",${c.lat},${c.lng}\n`; }); return csv;
+        const net = getActiveNetwork();
+        let csv = "\uFEFFWKT,Name,Type,ParentNode,Details\n"; 
+        
+        if (net.gss && net.gss.lat) {
+            csv += `"POINT (${net.gss.lng} ${net.gss.lat})","${net.gss.name}","GSS","","Code: ${net.gss.code}"\n`;
+        }
+        
+        net.poles.forEach(p => {
+            csv += `"POINT (${p.lng} ${p.lat})","Pole ${p.poleNo}","POLE","${p.poleNo}",""\n`;
+        });
+        
+        net.dts.forEach(d => {
+            csv += `"POINT (${d.lng} ${d.lat})","DT ${d.code}","DT","${d.poleNo}","Rating: ${d.rating}kVA | Phase: ${d.phase}"\n`;
+        });
+        
+        net.consumers.forEach(c => {
+            csv += `"POINT (${c.lng} ${c.lat})","${c.name}","CONSUMER","${c.poleNo}","KNo: ${c.kno} | Load: ${c.load}"\n`;
+        });
+        
+        net.lines.forEach(l => {
+            if (l.coords && l.coords.length === 2) {
+                const lng1 = l.coords[0][1].toFixed(6), lat1 = l.coords[0][0].toFixed(6);
+                const lng2 = l.coords[1][1].toFixed(6), lat2 = l.coords[1][0].toFixed(6);
+                csv += `"LINESTRING (${lng1} ${lat1}, ${lng2} ${lat2})","${l.type}","LINE","${l.fromNode} ➔ ${l.toNode}","Distance: ${(l.distanceMeters||0).toFixed(1)}m"\n`;
+            }
+        });
+        return csv;
     }
 
-    function exportDataToCSV() { toggleSidebar(false); downloadOrSaveExportFile(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}_Data.csv`, getCSVString(), "text/csv;charset=utf-8;"); }
-    function exportToAutoCAD_DXF() { toggleSidebar(false); let dxf = "0\nSECTION\n2\nENTITIES\n"; getActiveNetwork().lines.forEach(l => { if (l.coords && l.coords[0] && l.coords[1]) dxf += `0\nLINE\n8\n${l.type.replace(/\s+/g,'_')}\n10\n${l.coords[0][1]}\n20\n${l.coords[0][0]}\n30\n0\n11\n${l.coords[1][1]}\n21\n${l.coords[1][0]}\n31\n0\n`; }); dxf += "0\nENDSEC\n0\nEOF\n"; downloadOrSaveExportFile(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.dxf`, dxf, "application/dxf"); }
-    function exportToGoogleEarth_KML() { toggleSidebar(false); let kml = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${getActiveNetwork().feeder.name}</name>`; getActiveNetwork().lines.forEach(l => { if (l.coords && l.coords[0] && l.coords[1]) kml += `<Placemark><name>${l.type}</name><LineString><coordinates>${l.coords[0][1]},${l.coords[0][0]},0 ${l.coords[1][1]},${l.coords[1][0]},0</coordinates></LineString></Placemark>`; }); kml += "</Document></kml>"; downloadOrSaveExportFile(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.kml`, kml, "application/vnd.google-earth.kml+xml"); }
+    function exportDataToCSV() { 
+        toggleSidebar(false); 
+        const filename = `${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}_GE_Ready.csv`;
+        smartExportAskLocation(filename, getCSVString(), "text/csv;charset=utf-8;"); 
+    }
+
+    function exportToAutoCAD_DXF() { 
+        toggleSidebar(false); let dxf = "0\nSECTION\n2\nENTITIES\n"; getActiveNetwork().lines.forEach(l => { if (l.coords && l.coords[0] && l.coords[1]) dxf += `0\nLINE\n8\n${l.type.replace(/\s+/g,'_')}\n10\n${l.coords[0][1]}\n20\n${l.coords[0][0]}\n30\n0\n11\n${l.coords[1][1]}\n21\n${l.coords[1][0]}\n31\n0\n`; }); dxf += "0\nENDSEC\n0\nEOF\n"; 
+        smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.dxf`, dxf, "application/dxf"); 
+    }
     
-    // Auto Adjust Chart Paper PDF Export
+    function exportToGoogleEarth_KML() { 
+        toggleSidebar(false); let kml = `<?xml version="1.0" encoding="UTF-8"?><kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${getActiveNetwork().feeder.name}</name>`; getActiveNetwork().lines.forEach(l => { if (l.coords && l.coords[0] && l.coords[1]) kml += `<Placemark><name>${l.type}</name><LineString><coordinates>${l.coords[0][1]},${l.coords[0][0]},0 ${l.coords[1][1]},${l.coords[1][0]},0</coordinates></LineString></Placemark>`; }); kml += "</Document></kml>"; 
+        smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.kml`, kml, "application/vnd.google-earth.kml+xml"); 
+    }
+    
     function generateCadSLDPdf() { 
         toggleSidebar(false); const net = getActiveNetwork();
         const pts = [];
@@ -781,28 +853,22 @@
         net.poles.forEach(p => pts.push({ lat: p.lat, lng: p.lng }));
         net.dts.forEach(d => pts.push({ lat: d.lat, lng: d.lng }));
         net.consumers.forEach(c => pts.push({ lat: c.lat, lng: c.lng }));
-        
         if (pts.length === 0) return alert(t('no_data'));
-
         let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
         pts.forEach(p => { if(p.lat < minLat) minLat = p.lat; if(p.lat > maxLat) maxLat = p.lat; if(p.lng < minLng) minLng = p.lng; if(p.lng > maxLng) maxLng = p.lng; });
-
         let dLat = maxLat - minLat; if (dLat === 0) dLat = 0.001; let dLng = maxLng - minLng; if (dLng === 0) dLng = 0.001;
 
         const canvas = document.getElementById('cad-canvas'); const ctx = canvas.getContext('2d');
-        const W = 3508, H = 2480; // A3 Landscape
+        const W = 3508, H = 2480; 
         canvas.width = W; canvas.height = H;
-        
         ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
         ctx.strokeStyle = "#0f172a"; ctx.lineWidth = 10; ctx.strokeRect(40, 40, W - 80, H - 80);
-
         ctx.fillStyle = "#0f172a"; ctx.font = "bold 50px Arial"; ctx.fillText(`SLD: ${net.feeder.name.toUpperCase()}`, 80, 120);
-        ctx.font = "30px Arial"; ctx.fillStyle = "#64748b"; ctx.fillText(`GSS: ${net.gss.name} (${net.gss.code}) | Subdiv: ${net.feeder.subdivCode}`, 80, 170);
+        ctx.font = "30px Arial"; ctx.fillStyle = "#64748b"; ctx.fillText(`GSS: ${net.gss.name} | Subdiv: ${net.feeder.subdivCode}`, 80, 170);
 
         const padX = 200, padY = 250, usableW = W - (padX * 2), usableH = H - (padY * 2);
         const scale = Math.min(usableW / dLng, usableH / dLat);
         const xOff = padX + (usableW - (dLng * scale)) / 2, yOff = padY + (usableH - (dLat * scale)) / 2;
-
         const toX = (lng) => xOff + ((lng - minLng) * scale);
         const toY = (lat) => H - (yOff + ((lat - minLat) * scale));
 
@@ -831,19 +897,18 @@
 
         const { jsPDF } = window.jspdf; const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
         pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, 420, 297);
-        downloadOrSaveExportFile(`${net.feeder.name.replace(/\s+/g, '_')}_CAD_SLD.pdf`, pdf.output('blob'), "application/pdf");
+        smartExportAskLocation(`${net.feeder.name.replace(/\s+/g, '_')}_CAD_SLD.pdf`, pdf.output('blob'), "application/pdf");
     }
 
     function handleImportChoice(e) { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ev => { try { const p = JSON.parse(ev.target.result); if(p.feeders) appState = p; else if(p.poles) { const n = getActiveNetwork(); n.poles = p.poles||[]; n.lines = p.lines||[]; n.dts = p.dts||[]; n.consumers = p.consumers||[]; } renderEntireNetwork(); triggerPersistence(); showToast("Imported!"); } catch(err) { alert("Invalid File"); } }; r.readAsText(f); e.target.value = ''; }
 
-    /* ====== DECODE JWT GOOGLE TOKEN ====== */
     function parseJwt(token) { try { return JSON.parse(decodeURIComponent(window.atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''))); } catch(e) { return null; } }
     function handleCredentialResponse(response) {
         if(response.credential) {
             const user = parseJwt(response.credential);
             if(user) {
                 appState.user = { isLoggedIn: true, name: user.name, email: user.email, photoUrl: user.picture };
-                updateSidebarProfileUI(); triggerPersistence(); document.getElementById('btnDriveBackup').style.display = 'block'; showToast("Google Login Success!");
+                updateSidebarProfileUI(); triggerPersistence(); document.getElementById('btnDriveBackup').style.display = 'block'; showToast("Google Login Success!", true);
             }
         }
     }
@@ -852,12 +917,27 @@
             document.getElementById('userNameDisplay').innerText = appState.user.name; document.getElementById('userNameDisplay').style.display = 'block';
             document.getElementById('userEmailDisplay').innerText = appState.user.email; document.getElementById('userEmailDisplay').style.display = 'block';
             document.getElementById('googleAuthBox').style.display = 'none'; document.getElementById('btnDriveBackup').style.display = 'flex';
-            if(appState.user.photoUrl) { const img = document.getElementById('sidebarProfileImg'); img.src = appState.user.photoUrl; img.style.display = 'block'; document.getElementById('sidebarProfileIcon').style.display = 'none'; }
+            if(appState.user.photoUrl) { const img = document.getElementById('sidebarProfileImg'); img.src = appState.user.photoUrl; img.style.display = 'block'; }
+        } else {
+            document.getElementById('userNameDisplay').style.display = 'none';
+            document.getElementById('userEmailDisplay').style.display = 'none';
+            document.getElementById('sidebarProfileImg').style.display = 'none';
         }
     }
     function backupToGoogleDrive() { showToast("Uploading to Drive..."); setTimeout(() => { showToast("Backup Successful!", true); }, 2000); }
 
-    function initializeApplication() { loadPersistedData(() => { renderEntireNetwork(); document.getElementById('reticle-coordinates').innerText = `${map.getCenter().lat.toFixed(6)}, ${map.getCenter().lng.toFixed(6)}`; }); }
+    function initializeApplication() { 
+        loadPersistedData(() => { 
+            // Hide Splash Screen with animation
+            setTimeout(() => { 
+                const splash = document.getElementById('splash-screen');
+                if(splash) splash.classList.add('hidden'); 
+            }, 1800);
+            
+            renderEntireNetwork(); 
+            document.getElementById('reticle-coordinates').innerText = `${map.getCenter().lat.toFixed(6)}, ${map.getCenter().lng.toFixed(6)}`; 
+        }); 
+    }
     document.addEventListener('deviceready', initializeApplication, false); window.addEventListener('DOMContentLoaded', () => { if (!window.cordova) initializeApplication(); });
 </script>
 </body>
