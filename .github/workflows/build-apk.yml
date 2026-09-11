@@ -9,10 +9,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      ANDROID_HOME: /usr/local/lib/android/sdk
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -23,12 +19,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK Components
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-33" "build-tools;33.0.2"
-
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -36,16 +27,17 @@ jobs:
       - name: Install Cordova CLI
         run: npm install -g cordova
 
-      - name: Build Android APK
+      - name: Install Dependencies & Add Android Platform
         run: |
           npm install
-          cordova platform rm android || true
           cordova platform add android@12.0.1
-          cordova build android --release
+
+      - name: Build Android APK (Debug Mode)
+        run: cordova build android --debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: DISCOM-Survey-APK
-          path: platforms/android/app/build/outputs/apk/release/*.apk
+          path: platforms/android/app/build/outputs/apk/debug/*.apk
           retention-days: 7
