@@ -254,7 +254,7 @@
             <i class="fa-solid fa-tower-broadcast"></i> <span>Feeder Config</span>
         </div>
 
-        <div class="menu-category-title">Export (Folder Location)</div>
+        <div class="menu-category-title">Export (Save to Device)</div>
         <div class="menu-link-btn" onclick="generateCadSLDPdf()"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> <span>Export PDF</span></div>
         <div class="menu-link-btn" onclick="exportToAutoCAD_DXF()"><i class="fa-solid fa-draw-polygon" style="color:#10b981;"></i> <span>Export DXF</span></div>
         <div class="menu-link-btn" onclick="exportToGoogleEarth_KML()"><i class="fa-solid fa-earth-americas" style="color:#0ea5e9;"></i> <span>Export KML</span></div>
@@ -448,9 +448,9 @@
         document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    // MAP Z-INDEX HIERARCHY SETUP: Ensure lines are below icons
-    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 200;  // Lines at the bottom
-    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 250;
+    // MAP Z-INDEX HIERARCHY SETUP: Ensure lines are safely below icons
+    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 200;  // Consumer dash lines
+    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 250;    // Main lines
     map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 260;
     
     // Icons at the top
@@ -961,17 +961,35 @@
         }
     }
 
-    /* ====== 2. FIXED LOCAL FILE EXPORT (SAVE AS) ====== */
+    /* ====== 2. CORDOVA LOCAL FILE EXPORT ====== */
     async function smartExportAskLocation(filename, dataBlobOrText, mimeType) {
         const blob = dataBlobOrText instanceof Blob ? dataBlobOrText : new Blob([dataBlobOrText], { type: mimeType });
 
-        // 1. Android Cordova / Web Share API (Mobile Default)
-        const file = new File([blob], filename, { type: mimeType });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try { await navigator.share({ title: filename, files: [file] }); showToast("✅ File exported successfully!"); return; } catch (err) {}
+        // 1. Android Cordova App API (Direct Save to Device Download Folder)
+        if (typeof cordova !== 'undefined' && cordova.file) {
+            try {
+                let downloadFolder = cordova.file.externalRootDirectory + "Download/";
+                window.resolveLocalFileSystemURL(downloadFolder, function(dirEntry) {
+                    dirEntry.getFile(filename, { create: true, exclusive: false }, function(fileEntry) {
+                        fileEntry.createWriter(function(fileWriter) {
+                            fileWriter.onwriteend = function() {
+                                alert("✅ File saved in phone's 'Download' folder:\n" + filename);
+                                showToast("Exported to Downloads!");
+                            };
+                            fileWriter.onerror = function() { alert("File write failed"); };
+                            fileWriter.write(blob);
+                        }, function() { alert("Cannot write file"); });
+                    }, function() { alert("Cannot create file"); cordovaShareFallback(blob, filename, mimeType); });
+                }, function() { 
+                    cordovaShareFallback(blob, filename, mimeType); 
+                });
+            } catch(e) {
+                cordovaShareFallback(blob, filename, mimeType);
+            }
+            return;
         }
 
-        // 2. Desktop File System Access API
+        // 2. Desktop Web File System Access
         if (window.showSaveFilePicker) {
             try {
                 const handle = await window.showSaveFilePicker({ suggestedName: filename, types: [{ description: 'Export File', accept: { [mimeType]: ['.csv', '.kml', '.dxf', '.pdf'] } }] });
@@ -982,16 +1000,23 @@
             } catch (err) { return; }
         }
 
-        // 3. Absolute Fallback: Standard browser download (100% works locally)
-        const url = URL.createObjectURL(blob); 
-        const a = document.createElement("a"); 
-        a.style.display = 'none';
-        a.href = url; 
-        a.download = filename;
-        document.body.appendChild(a); 
-        a.click(); 
-        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
-        showToast("✅ Downloaded to device Downloads folder!");
+        // 3. Fallback Share / Standard Web Download
+        cordovaShareFallback(blob, filename, mimeType);
+    }
+    
+    function cordovaShareFallback(blob, filename, mimeType) {
+        const file = new File([blob], filename, { type: mimeType });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ title: filename, files: [file] }).catch(()=>{});
+            showToast("Opening Share Dialog");
+        } else {
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement("a"); 
+            a.style.display = 'none'; a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); 
+            setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+            showToast("✅ Download triggered!");
+        }
     }
 
     window.getCSVString = function() {
