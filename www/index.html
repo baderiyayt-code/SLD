@@ -59,10 +59,10 @@
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
 
         /* ====== SEARCH BAR ====== */
-        /* FIX 2: Added z-index: 9999 to aggressively overlay above the KPI bar */
-        .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 9999; }
+        /* FIX 4: Implemented strictly elevated Z-Index mapping for overlapping */
+        .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 2000; }
         .search-input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
-        .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 10000; }
+        .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 2500; }
         .suggestions-panel.active { display: flex; flex-direction: column; }
         .suggestion-item { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column;}
         .suggestion-item:last-child { border-bottom: none; }
@@ -70,8 +70,9 @@
         .sugg-title { font-size: 0.85rem; font-weight: 800; color: var(--text-main); display: flex; justify-content: space-between;}
         .sugg-desc { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;}
 
-        /* ====== KPI BAR (5 items) ====== */
-        .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; pointer-events: auto; position: relative;}
+        /* ====== KPI BAR ====== */
+        /* FIX 4: Explicit lower index underneath search components */
+        .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; pointer-events: auto; position: relative; z-index: 1;}
         .kpi-tile { background: var(--bg-glass); backdrop-filter: blur(12px); padding: 8px 2px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 3px solid transparent;}
         .kpi-tile:nth-child(1) { border-top-color: var(--c-11kv); } .kpi-tile:nth-child(2) { border-top-color: var(--c-dt); } .kpi-tile:nth-child(3) { border-top-color: var(--c-lt); } .kpi-tile:nth-child(4) { border-top-color: #8b5cf6; } .kpi-tile:nth-child(5) { border-top-color: #ec4899; }
         .kpi-label { font-size: 0.50rem; color: var(--text-sub); font-weight: 800; text-transform: uppercase; white-space: nowrap;}
@@ -393,7 +394,7 @@
             appLanguage: "ऐप की भाषा", distUnit: "दूरी की इकाई", gpsInterval: "जीपीएस रीफ्रेश समय (सेकंड)", gpsAcc: "जीपीएस एक्यूरेसी लिमिट (मीटर)", resetData: "ऐप डेटा रीसेट करें",
             confirmLoc: "मैप सेंटर लोकेशन पक्की करें", confirmHere: "यहाँ सेट करें", cancel: "रद्द करें", setNewLoc: "नई लोकेशन सेट करें",
             toastSettings: "सेटिंग्स सेव हो गईं!", toastDel: "सफलतापूर्वक डिलीट हुआ!", toastImport: "सफलतापूर्वक इम्पोर्ट हुआ!",
-            aboutDesc: "डिस्कॉम फील्ड सर्वे ऐप जिसे पेशेवर GIS नेटवर्क मैपिंग, offline डेटा कलेक्शन और SLD प्लानिंग के लिए डिज़ाइन किया गया है।"
+            aboutDesc: "डिस्कॉम फील्ड सर्वे ऐप जिसे पेशेवर GIS नेटवर्क मैपिंग, ऑफलाइन डेटा कलेक्शन और SLD प्लानिंग के लिए डिज़ाइन किया गया है।"
         }
     };
 
@@ -548,15 +549,29 @@
         return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
     }
 
+    /* FIX 2: Strict prefix routing for precise lat/lng assignments preventing GSS/Pole ID clashes */
     function getNodeCoords(nodeId) { 
         const net = getActiveNetwork(); 
-        if (appState.gssNodes[nodeId]) return { lat: appState.gssNodes[nodeId].lat, lng: appState.gssNodes[nodeId].lng };
-        if (nodeId === 'GSS' || nodeId === net.feeder.code) {
+        const idStr = String(nodeId);
+        
+        if (idStr.startsWith('GSS_')) {
+            const code = idStr.replace('GSS_', '');
+            if (appState.gssNodes[code]) return { lat: appState.gssNodes[code].lat, lng: appState.gssNodes[code].lng };
+        }
+        if (idStr.startsWith('DT_')) {
+            const code = idStr.replace('DT_', '');
+            const d = net.dts.find(x => String(x.code) === code);
+            if (d) return { lat: d.lat, lng: d.lng };
+        }
+
+        // Fallback checks for legacy line formats
+        const p = net.poles.find(x => String(x.poleNo) === idStr); if (p) return { lat: p.lat, lng: p.lng };
+        const d = net.dts.find(x => String(x.code) === idStr); if (d) return { lat: d.lat, lng: d.lng };
+        if (appState.gssNodes[idStr]) return { lat: appState.gssNodes[idStr].lat, lng: appState.gssNodes[idStr].lng };
+        if (idStr === 'GSS' || idStr === net.feeder.code) {
             const g = appState.gssNodes[net.feeder.parentGss];
             if(g) return { lat: g.lat, lng: g.lng };
         }
-        const p = net.poles.find(x => x.poleNo == nodeId); if (p) return { lat: p.lat, lng: p.lng };
-        const d = net.dts.find(x => x.code == nodeId); if (d) return { lat: d.lat, lng: d.lng };
         return null; 
     }
 
@@ -689,10 +704,10 @@
     }
 
     /* ====== MAP LAYER SETUP ====== */
-    // FIX 1: Removed `preferCanvas: true` so map seamlessly uses standard SVG rendering. SVG inherently handles custom panes/Z-indexes flawlessly without vanishing bugs.
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false, 
+        preferCanvas: true, 
         rotate: true, 
         touchRotate: true, 
         shiftKeyRotate: true,
@@ -709,12 +724,12 @@
     window.toggleMapLayer = function() { 
         map.removeLayer(tileLayers[layerKeys[currentTileIndex]].layer); currentTileIndex = (currentTileIndex + 1) % layerKeys.length; 
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
-        renderEntireNetwork(); // Force refresh to guarantee consistency after switch
     }
 
-    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 410;
-    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 420;
-    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 430;
+    /* FIX 1: Safely elevated Z-Index so they don't get trapped under Map Layers (OSM) */
+    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 450;
+    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 460;
+    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 470;
     map.createPane('gssPane'); map.getPane('gssPane').style.zIndex = 500;
     map.createPane('htPolePane'); map.getPane('htPolePane').style.zIndex = 510;
     map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 520;
@@ -763,16 +778,19 @@
             });
 
             const spanBuckets = {};
-            // FIX 1 CONTINUED: Aggressively recalculating line coordinates on every render loop ensures they always map correctly to their nodes 
             net.lines.forEach(line => {
-                const c1 = getNodeCoords(line.fromNode); const c2 = getNodeCoords(line.toNode); 
+                // FIX 1 & 2: Overriding coordinates every render guarantees snapping and visibility recovery
+                const c1 = getNodeCoords(line.fromNode); 
+                const c2 = getNodeCoords(line.toNode); 
                 if (c1 && c2) { 
                     line.coords = [[c1.lat, c1.lng], [c2.lat, c2.lng]]; 
                     line.distanceMeters = window.calcDistance(c1.lat, c1.lng, c2.lat, c2.lng); 
                 } else return; 
-                
+
                 const spec = getLineSpec(line.type); if (!f[spec.filterKey]) return;
-                const spanKey = [line.fromNode, line.toNode].sort().join('<-->'); if (!spanBuckets[spanKey]) spanBuckets[spanKey] = []; spanBuckets[spanKey].push(line);
+                const spanKey = [String(line.fromNode), String(line.toNode)].sort().join('<-->'); 
+                if (!spanBuckets[spanKey]) spanBuckets[spanKey] = []; 
+                spanBuckets[spanKey].push(line);
             });
 
             Object.keys(spanBuckets).forEach(spanKey => {
@@ -1127,9 +1145,13 @@
                 <button class="btn-action-primary" onclick="window.saveNewLTPole()">Save LT Pole</button>`);
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
-            const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: p.poleNo, lat: p.lat, lng: p.lng}));
+            
+            // FIX 3: Robust String casting for Pole IDs to prevent dropdown filtering mismatch
+            const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: String(p.poleNo), lat: p.lat, lng: p.lng}));
+            
+            // FIX 2: Prefix GSS ID to distinguish it cleanly from Pole IDs
             const feederGss = appState.gssNodes[net.feeder.parentGss];
-            if(feederGss) htNodes.push({id: feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
+            if(feederGss) htNodes.push({id: 'GSS_'+feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
             
             let sortedHT = window.sortByDistance(htNodes, snapLat, snapLng);
             let defaultFrom = sortedHT.length > 0 ? sortedHT[0].id : '';
@@ -1206,30 +1228,31 @@
         document.getElementById('inpConsParent').innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(centerLat, centerLng, n.lat, n.lng))})</option>`).join('');
     }
 
+    /* FIX 3: Fixed Strict String matching in filterLineNodes and syncLineToSelect so Poles appear perfectly */
     window.filterLineNodes = function() {
         const type = document.getElementById('inpLineType').value; const net = getActiveNetwork();
         const fromSel = document.getElementById('inpFromNode'); const dtSelectorBox = document.getElementById('ltLineDTSelector');
-        const defaultFrom = document.getElementById('inpDefaultFrom').value;
+        const defaultFrom = String(document.getElementById('inpDefaultFrom').value);
         const center = map.getCenter();
 
         if (type.includes('LT')) {
             dtSelectorBox.style.display = 'block'; const selectedDT = document.getElementById('inpTargetDT').value; if(!selectedDT) return;
             
-            let nodes = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: p.poleNo}));
-            const dtObj = net.dts.find(d => d.code == selectedDT);
-            if(dtObj) nodes.push({id: selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
+            let nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === String(selectedDT)).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: String(p.poleNo)}));
+            const dtObj = net.dts.find(d => String(d.code) === String(selectedDT));
+            if(dtObj) nodes.push({id: 'DT_'+selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
             
             nodes = window.sortByDistance(nodes, center.lat, center.lng);
             fromSel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
         } else {
             dtSelectorBox.style.display = 'none';
-            let nodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({...p, title: 'HT Pole '+p.poleNo, id: p.poleNo}));
+            let nodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({...p, title: 'HT Pole '+p.poleNo, id: String(p.poleNo)}));
             const parentGss = appState.gssNodes[net.feeder.parentGss];
-            if (parentGss) nodes.push({id: parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
+            if (parentGss) nodes.push({id: 'GSS_'+parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
             
             nodes = window.sortByDistance(nodes, center.lat, center.lng);
             let optsHtml = '';
-            nodes.forEach(n => { optsHtml += `<option value="${n.id}" ${n.id == defaultFrom ? 'selected' : ''}>${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`; });
+            nodes.forEach(n => { optsHtml += `<option value="${n.id}" ${String(n.id) === defaultFrom ? 'selected' : ''}>${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`; });
             fromSel.innerHTML = optsHtml;
         }
         window.syncLineToSelect();
@@ -1237,23 +1260,25 @@
 
     window.syncLineToSelect = function() {
         const type = document.getElementById('inpLineType').value; 
-        const fromVal = document.getElementById('inpFromNode').value; 
+        const fromVal = String(document.getElementById('inpFromNode').value); 
         const toSel = document.getElementById('inpToNode');
         const net = getActiveNetwork(); 
         const center = map.getCenter();
         
         let nodes = [];
         if (type.includes('LT')) {
-            const selectedDT = document.getElementById('inpTargetDT').value;
-            nodes = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT && p.poleNo != fromVal).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: p.poleNo}));
-            if(selectedDT != fromVal) {
-                const dtObj = net.dts.find(d => d.code == selectedDT);
-                if(dtObj) nodes.push({id: selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
+            const selectedDT = String(document.getElementById('inpTargetDT').value);
+            nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === selectedDT && String(p.poleNo) !== fromVal).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: String(p.poleNo)}));
+            if(selectedDT !== fromVal && ('DT_'+selectedDT) !== fromVal) {
+                const dtObj = net.dts.find(d => String(d.code) === selectedDT);
+                if(dtObj) nodes.push({id: 'DT_'+selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
             }
         } else {
-            nodes = net.poles.filter(p => p.lineType !== 'LT' && p.poleNo != fromVal).map(p => ({...p, title: 'HT Pole '+p.poleNo, id: p.poleNo}));
+            nodes = net.poles.filter(p => p.lineType !== 'LT' && String(p.poleNo) !== fromVal).map(p => ({...p, title: 'HT Pole '+p.poleNo, id: String(p.poleNo)}));
             const parentGss = appState.gssNodes[net.feeder.parentGss];
-            if (parentGss && parentGss.code != fromVal) nodes.push({id: parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
+            if (parentGss && String(parentGss.code) !== fromVal && ('GSS_'+parentGss.code) !== fromVal) {
+                nodes.push({id: 'GSS_'+parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
+            }
         }
         
         nodes = window.sortByDistance(nodes, center.lat, center.lng);
