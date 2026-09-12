@@ -115,6 +115,10 @@
         .lt-pole-icon { background: #10b981; color: white; border: 2px solid white; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 22px; height: 22px;}
         
         .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5);}
+
+        /* MOVE TOOLTIP STYLING */
+        .leaflet-tooltip.move-tooltip { background-color: #1e293b; color: #ffffff; border: none; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: 700; font-family: 'Inter', sans-serif; padding: 6px 10px; }
+        .leaflet-tooltip.move-tooltip::before { border-top-color: #1e293b; }
         
         @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
@@ -138,7 +142,7 @@
         .form-input:focus, .form-select:focus { border-color: var(--accent); background: #ffffff; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
         .btn-danger-outline { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid #ef4444; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
         /* ====== SETTINGS & SIDEBAR ====== */
@@ -232,7 +236,7 @@
         </div>
     </div>
 
-    <!-- MOVE/RELOCATE CONFIRMATION BAR -->
+    <!-- LIVE MOVE/RELOCATE CONFIRMATION BAR -->
     <div id="move-confirm-bar" class="floating-action-bar">
         <div><b id="moveTargetTitle" style="color:var(--accent); font-size:1.0rem;">Target</b></div>
         <div style="display:flex; gap:8px; margin-top:4px;">
@@ -340,6 +344,7 @@
     };
 
     let historyStack = [];
+    let liveMoveMarker = null; // Used for visually moving icons
 
     function getActiveNetwork() {
         if (!appState.feeders[appState.currentFeederCode]) appState.currentFeederCode = Object.keys(appState.feeders)[0] || "FDR-01";
@@ -542,6 +547,7 @@
     map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 460;
     map.createPane('dtPane'); map.getPane('dtPane').style.zIndex = 650; // DT directly over HT Poles
     map.createPane('consumerPane'); map.getPane('consumerPane').style.zIndex = 700;
+    map.createPane('pinPane'); map.getPane('pinPane').style.zIndex = 10000; // Guaranteed Pin Visibility
 
     const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
 
@@ -574,6 +580,9 @@
             const isGssMini = currentZoom < 13;
 
             Object.values(appState.gssNodes).forEach(gss => {
+                // SKIP Rendering the GSS if it is currently being Live Moved
+                if (appState.activeMove && appState.activeMove.type === 'GSS' && appState.activeMove.id === gss.code) return;
+
                 if (typeof gss.lat === 'number') {
                     const gssIcon = isGssMini ? L.divIcon({ className: 'gss-mini-dot', iconSize: [16,16], iconAnchor: [8,8] }) : L.divIcon({ className: 'gss-square-icon', html: `<span>GSS</span>`, iconSize: [32,32], iconAnchor: [16,16] });
                     const m = L.marker([gss.lat, gss.lng], { icon: gssIcon, pane: 'gssPane' });
@@ -608,6 +617,9 @@
 
             if (f.poles) {
                 net.poles.forEach(p => {
+                    // SKIP Rendering if currently being moved
+                    if (appState.activeMove && appState.activeMove.type === 'POLE' && appState.activeMove.id === p.id) return;
+
                     const isOrphan = appState.orphanPoleIds.has(p.id); const isLT = p.lineType === 'LT';
                     if (isLT && !showLTPoles && !isOrphan) return; if (!isLT && !showHTPoles && !isOrphan) return;
                     const iconClass = isLT ? 'lt-pole-icon' : 'pole-marker-icon'; const pane = isLT ? 'ltPolePane' : 'htPolePane';
@@ -633,6 +645,9 @@
 
             if (showConsumers) {
                 net.consumers.forEach(c => {
+                    // SKIP Rendering if currently being moved
+                    if (appState.activeMove && appState.activeMove.type === 'CONSUMER' && appState.activeMove.id === c.id) return;
+
                     let parentCoord = null;
                     if (c.parentType === 'POLE') { const p = net.poles.find(x => x.poleNo == c.parentRef); if (p) parentCoord = { lat: p.lat, lng: p.lng }; } 
                     else if (c.parentType === 'DT') { const d = net.dts.find(x => x.code == c.parentRef); if (d) parentCoord = { lat: d.lat, lng: d.lng }; }
@@ -714,13 +729,9 @@
     window.openAddForm = function(type) {
         window.toggleSpeedDial(false); 
         
-        // ONLY show pin for POLE, LTPOLE, and CONSUMER. Lines & DT bypass the pin.
         if (type === 'POLE' || type === 'LTPOLE' || type === 'CONSUMER') { 
             appState.placementType = type;
-            
-            // Show the static screen-center pin
             document.getElementById('center-placement-pin').style.display = 'block';
-            
             document.getElementById('bottom-single-action').style.display = 'none';
             document.getElementById('placement-confirm-bar').style.display = 'flex';
         } else {
@@ -797,23 +808,60 @@
     window.saveEditedDT = function(id) { saveSnapshot(); const net = getActiveNetwork(); const d = net.dts.find(x => x.id === id); if (!d) return; d.code = document.getElementById('editDTCode').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
     window.saveEditedConsumer = function(id) { saveSnapshot(); const net = getActiveNetwork(); const c = net.consumers.find(x => x.id === id); if (!c) return; c.name = document.getElementById('editConsName').value.trim(); c.kno = document.getElementById('editConsKno').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
 
+    /* ====== LIVE DRAGGABLE ICON MOVE LOGIC ====== */
     window.startObjectMove = function(type, id, title) {
-        map.closePopup(); appState.activeMove = { type, id };
-        document.getElementById('bottom-single-action').style.display = 'none'; document.getElementById('move-confirm-bar').style.display = 'flex';
+        map.closePopup(); 
+        appState.activeMove = { type, id };
+        document.getElementById('bottom-single-action').style.display = 'none'; 
+        document.getElementById('move-confirm-bar').style.display = 'flex';
         document.getElementById('moveTargetTitle').innerText = `Move: ${title}`;
+        
         let target = null;
-        if(type === 'GSS') target = appState.gssNodes[id];
-        else {
+        let iconHtml = ''; let iconClass = ''; let iconSize = [24,24]; let iconAnchor = [12,12];
+
+        if(type === 'GSS') {
+            target = appState.gssNodes[id];
+            iconClass = 'gss-square-icon'; iconHtml = '<span>GSS</span>'; iconSize = [32,32]; iconAnchor = [16,16];
+        } else {
             const net = getActiveNetwork(); 
-            if (type === 'POLE') target = net.poles.find(x => x.id === id); 
-            else if (type === 'CONSUMER') target = net.consumers.find(x => x.id === id);
+            if (type === 'POLE') {
+                target = net.poles.find(x => x.id === id); 
+                if(target) {
+                    if(target.lineType === 'LT') {
+                        iconClass = 'lt-pole-icon';
+                        let displayNo = target.poleNo; if(String(displayNo).includes('-')) displayNo = String(displayNo).split('-')[1];
+                        iconHtml = `<span>${displayNo}</span>`; iconSize = [22,22]; iconAnchor = [11,11];
+                    } else {
+                        iconClass = 'pole-marker-icon'; iconHtml = `<span>${target.poleNo}</span>`; iconSize = [26,26]; iconAnchor = [13,13];
+                    }
+                }
+            } else if (type === 'CONSUMER') {
+                target = net.consumers.find(x => x.id === id);
+                iconClass = 'consumer-marker-icon'; iconHtml = '<i class="fa-solid fa-house"></i>'; iconSize = [18,18]; iconAnchor = [9,9];
+            }
         }
-        if (target && target.lat) map.panTo([target.lat, target.lng]);
+        
+        if (target && target.lat) {
+            map.panTo([target.lat, target.lng]);
+            renderEntireNetwork(); // Hides original marker
+
+            // Create Draggable Live Marker
+            liveMoveMarker = L.marker([target.lat, target.lng], {
+                draggable: true,
+                pane: 'pinPane',
+                icon: L.divIcon({ className: iconClass, html: iconHtml, iconSize: iconSize, iconAnchor: iconAnchor })
+            }).addTo(map);
+            
+            liveMoveMarker.bindTooltip("Drag me to new location", {permanent: true, direction: "top", offset: [0, -15], className: "move-tooltip"}).openTooltip();
+        }
     }
     
     window.confirmObjectMove = function() {
-        if (!appState.activeMove) return; saveSnapshot();
-        const c = map.getCenter(); const lat = parseFloat(c.lat.toFixed(6)), lng = parseFloat(c.lng.toFixed(6));
+        if (!appState.activeMove || !liveMoveMarker) return; saveSnapshot();
+        
+        const pos = liveMoveMarker.getLatLng();
+        const lat = parseFloat(pos.lat.toFixed(6)); 
+        const lng = parseFloat(pos.lng.toFixed(6));
         const net = getActiveNetwork(); 
         
         if (appState.activeMove.type === 'GSS') {
@@ -839,7 +887,13 @@
         window.cancelObjectMove(); renderEntireNetwork(); triggerPersistence(); showToast("Location Updated!");
     }
     
-    window.cancelObjectMove = function() { appState.activeMove = null; document.getElementById('move-confirm-bar').style.display = 'none'; document.getElementById('bottom-single-action').style.display = 'block'; }
+    window.cancelObjectMove = function() { 
+        if(liveMoveMarker) { map.removeLayer(liveMoveMarker); liveMoveMarker = null; }
+        appState.activeMove = null; 
+        document.getElementById('move-confirm-bar').style.display = 'none'; 
+        document.getElementById('bottom-single-action').style.display = 'block'; 
+        renderEntireNetwork(); 
+    }
 
     window.openAddNewFeederModal = function() {
         const gssOpts = Object.values(appState.gssNodes).map(g => `<option value="${g.code}">${g.code} - ${g.name}</option>`).join('');
@@ -888,7 +942,6 @@
         } else if (type === 'LTPOLE') {
             if (net.dts.length === 0) return alert("You must add a DT first before adding an LT Pole!");
             
-            // Auto Sort DTs by proximity
             let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
             const dtOpts = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id} (${window.formatDistance(window.calcDistance(snapLat, snapLng, d.lat, d.lng))})</option>`).join('');
 
@@ -916,7 +969,6 @@
                 window.filterLineNodes(); 
             }, 30);
         } else if (type === 'DT') {
-            // Sort parent HT Poles by distance
             let parentNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: p.poleNo, title: 'HT Pole '+p.poleNo, lat: p.lat, lng: p.lng}));
             const feederGss = appState.gssNodes[net.feeder.parentGss];
             if(feederGss) parentNodes.push({id: feederGss.code, title: 'GSS '+feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
@@ -932,7 +984,6 @@
         } else if (type === 'CONSUMER') {
             if (net.dts.length === 0) return alert("Must have at least one DT to connect Consumer!");
             
-            // Sort DTs globally for the first dropdown based on location
             let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
             const dtOpts = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id} (${window.formatDistance(window.calcDistance(snapLat, snapLng, d.lat, d.lng))})</option>`).join('');
 
@@ -967,9 +1018,7 @@
         const dtObj = net.dts.find(d => d.code == selectedDT);
         if(dtObj) nodes.push({id: selectedDT, title: 'Direct to DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
         
-        // Sort LT poles proximity to the placement pin
         nodes = window.sortByDistance(nodes, centerLat, centerLng);
-        
         document.getElementById('inpConsParent').innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(centerLat, centerLng, n.lat, n.lng))})</option>`).join('');
     }
 
@@ -979,9 +1028,7 @@
         const center = map.getCenter();
 
         if (type.includes('LT')) {
-            dtSelectorBox.style.display = 'block'; 
-            const selectedDT = document.getElementById('inpTargetDT').value; 
-            if(!selectedDT) return;
+            dtSelectorBox.style.display = 'block'; const selectedDT = document.getElementById('inpTargetDT').value; if(!selectedDT) return;
             
             let nodes = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: p.poleNo}));
             const dtObj = net.dts.find(d => d.code == selectedDT);
@@ -1092,13 +1139,33 @@
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Consumer added successfully!");
     }
 
+    /* ====== SECURE RESET APP DATA ====== */
     window.openResetConfirmationModal = function() {
         openModal(`<div class="sheet-head"><div class="sheet-title" style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Reset App Data</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-            <div class="form-row"><label>Type <b>"RESET"</b> to clear ALL app data</label><input type="text" id="inpResetText" class="form-input"></div>
-            <button class="btn-action-primary" style="background:#dc2626;" onclick="window.executeAppReset()">Confirm Delete</button>`);
+            <div style="background:#fee2e2; color:#b91c1c; padding:12px; border-radius:8px; font-size:0.85rem; margin-bottom:12px; font-weight:600;">
+                <i class="fa-solid fa-warning"></i> Warning: This action will permanently erase all surveys, lines, poles, and offline settings.
+            </div>
+            <div class="form-row"><label>Type <b>RESET</b> to confirm</label>
+            <input type="text" id="inpResetText" class="form-input" placeholder="Type RESET here" oninput="window.checkResetInput()"></div>
+            <button id="btnConfirmReset" class="btn-action-primary" style="background:#fca5a5; cursor:not-allowed;" disabled onclick="window.executeAppReset()">Permanently Delete All Data</button>`);
     }
+
+    window.checkResetInput = function() {
+        const val = document.getElementById('inpResetText').value.trim();
+        const btn = document.getElementById('btnConfirmReset');
+        if(val === 'RESET') {
+            btn.style.background = '#dc2626';
+            btn.style.cursor = 'pointer';
+            btn.disabled = false;
+        } else {
+            btn.style.background = '#fca5a5';
+            btn.style.cursor = 'not-allowed';
+            btn.disabled = true;
+        }
+    }
+
     window.executeAppReset = function() { 
-        if (document.getElementById('inpResetText').value.trim() !== "RESET") return alert("Type RESET to confirm"); 
+        if (document.getElementById('inpResetText').value.trim() !== "RESET") return; 
         localforage.clear(); localStorage.clear(); location.reload();
     }
 
@@ -1159,7 +1226,6 @@
         }
     }
 
-    /* Utility function to safely escape XML for KML */
     function escapeXml(unsafe) {
         return unsafe.replace(/[<>&'"]/g, function (c) {
             switch (c) { case '<': return '&lt;'; case '>': return '&gt;'; case '&': return '&amp;'; case '\'': return '&apos;'; case '"': return '&quot;'; }
@@ -1183,7 +1249,6 @@
         dxf += "0\nENDSEC\n0\nEOF\n"; smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.dxf`, dxf, "application/dxf"); 
     }
     
-    // KML EXPORT: NOW INCLUDES DT & GSS PLACEMARKS
     window.exportToGoogleEarth_KML = function() { 
         window.toggleSidebar(false); 
         const feederName = escapeXml(getActiveNetwork().feeder.name);
@@ -1194,7 +1259,6 @@
         kml += `<Style id="style-dt"><IconStyle><Icon><href>http://maps.google.com/mapfiles/kml/shapes/triangle.png</href></Icon></IconStyle></Style>\n`;
         kml += `<Style id="style-gss"><IconStyle><Icon><href>http://maps.google.com/mapfiles/kml/shapes/polygon.png</href></Icon></IconStyle></Style>\n`;
 
-        // 1. Plot Lines
         getActiveNetwork().lines.forEach(l => { 
             if (l.coords && l.coords[0] && l.coords[1]) {
                 let styleId = 'style-11kv';
@@ -1203,14 +1267,12 @@
             }
         }); 
 
-        // 2. Plot DT Points
         getActiveNetwork().dts.forEach(d => {
             if (d.lat && d.lng) {
                 kml += `<Placemark>\n<name>DT ${escapeXml(d.code)}</name>\n<description>Rating: ${d.rating}kVA</description>\n<styleUrl>#style-dt</styleUrl>\n<Point>\n<coordinates>${d.lng},${d.lat},0</coordinates>\n</Point>\n</Placemark>\n`;
             }
         });
 
-        // 3. Plot GSS Points
         Object.values(appState.gssNodes).forEach(g => {
             if (g.lat && g.lng) {
                 kml += `<Placemark>\n<name>GSS ${escapeXml(g.name)}</name>\n<description>Code: ${escapeXml(g.code)}</description>\n<styleUrl>#style-gss</styleUrl>\n<Point>\n<coordinates>${g.lng},${g.lat},0</coordinates>\n</Point>\n</Placemark>\n`;
