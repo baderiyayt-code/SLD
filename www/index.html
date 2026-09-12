@@ -48,6 +48,7 @@
         #app-container { position: relative; width: 100%; height: 100%; display: none; flex-direction: column; }
 
         /* ====== SPLASH SCREEN ====== */
+        /* FIX: Splash Screen moved OUTSIDE app-container to show during boot process */
         #splash-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #2563eb); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: opacity 0.6s ease, transform 0.6s ease; }
         #splash-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
         .splash-logo { width: 100px; height: 100px; background: white; color: #2563eb; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: pulse 2s infinite; }
@@ -203,8 +204,17 @@
 </head>
 <body>
 
+<!-- SPLASH SCREEN: MOVED OUTSIDE SO IT SHOWS GLOBALLY ON BOOT -->
+<div id="splash-screen">
+    <div class="splash-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
+    <h1 class="splash-title">DISCOM Pro</h1>
+    <p class="splash-subtitle">Enterprise Survey App</p>
+    <p class="splash-credits" style="font-size: 0.8rem; font-weight: 700; opacity: 0.8; margin-top: 15px; color:#bfdbfe;">Developed by Suraj Singh Mehta</p>
+    <div class="splash-loader"></div>
+</div>
+
 <!-- AUTH SCREEN: SHOWN IF NOT LOGGED IN -->
-<div id="auth-screen">
+<div id="auth-screen" style="display: none;">
     <div class="auth-card">
         <div class="auth-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
         <h2>DISCOM Pro</h2>
@@ -226,15 +236,6 @@
 <!-- MAIN APP: HIDDEN UNTIL LOGGED IN -->
 <div id="app-container">
     
-    <!-- SPLASH SCREEN -->
-    <div id="splash-screen">
-        <div class="splash-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
-        <h1 class="splash-title">DISCOM Pro</h1>
-        <p class="splash-subtitle">Enterprise Survey App</p>
-        <p class="splash-credits" style="font-size: 0.8rem; font-weight: 700; opacity: 0.8; margin-top: 15px; color:#bfdbfe;">Developed by Suraj Singh Mehta</p>
-        <div class="splash-loader"></div>
-    </div>
-
     <!-- NOTIFICATION TOAST -->
     <div id="app-toast"><i class="fa-solid fa-circle-check" style="color:#4ade80;"></i> <span id="toast-msg">Success</span></div>
 
@@ -418,6 +419,9 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // =========================================
 
+    // ADMIN CONFIGURATION - Define the admin email here
+    const ADMIN_EMAIL = 'admin@discom.com';
+
     let appState = {
         settings: { checkOrphanNode: true, unit: 'm', gpsInterval: 3, gpsAccuracy: 10, language: 'en' },
         user: { isLoggedIn: false, name: "", email: "", id: null },
@@ -527,20 +531,59 @@
         }
     }
 
+    /* FIX 2: Admin Data Access (Merge logic) */
     async function pullFromSupabase() {
         if (!appState.user.isLoggedIn || !appState.user.id) return;
         setSyncStatus('syncing');
         try {
-            const { data, error } = await supabaseClient.from('survey_data').select('data').eq('user_id', appState.user.id).single();
-            if (data && data.data && Object.keys(data.data).length > 0) {
-                const cloudData = data.data;
-                appState.feeders = cloudData.feeders || appState.feeders;
-                appState.gssNodes = cloudData.gssNodes || appState.gssNodes;
-                appState.currentFeederCode = cloudData.currentFeederCode || appState.currentFeederCode;
+            const isAdmin = appState.user.email === ADMIN_EMAIL;
+            let query = supabaseClient.from('survey_data').select('data');
+            
+            // If normal user, filter by their own user_id. If Admin, pull all rows.
+            if (!isAdmin) {
+                query = query.eq('user_id', appState.user.id);
+            }
+            
+            const { data, error } = await query;
+            
+            if (data && data.length > 0) {
+                if (isAdmin) {
+                    // Merge all users' data for Admin
+                    appState.feeders = {};
+                    appState.gssNodes = {};
+                    
+                    data.forEach(row => {
+                        const cloudData = row.data;
+                        if (cloudData.gssNodes) Object.assign(appState.gssNodes, cloudData.gssNodes);
+                        
+                        if (cloudData.feeders) {
+                            Object.keys(cloudData.feeders).forEach(fCode => {
+                                if (!appState.feeders[fCode]) {
+                                    appState.feeders[fCode] = JSON.parse(JSON.stringify(cloudData.feeders[fCode]));
+                                } else {
+                                    const src = cloudData.feeders[fCode];
+                                    const tgt = appState.feeders[fCode];
+                                    tgt.poles.push(...(src.poles || []));
+                                    tgt.dts.push(...(src.dts || []));
+                                    tgt.lines.push(...(src.lines || []));
+                                    tgt.consumers.push(...(src.consumers || []));
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Normal user logic
+                    const cloudData = data[0].data;
+                    appState.feeders = cloudData.feeders || appState.feeders;
+                    appState.gssNodes = cloudData.gssNodes || appState.gssNodes;
+                    appState.currentFeederCode = cloudData.currentFeederCode || appState.currentFeederCode;
+                }
+                
                 renderEntireNetwork();
                 setSyncStatus('synced');
             } else {
-                syncToSupabase();
+                if (!isAdmin) syncToSupabase();
+                else setSyncStatus('synced');
             }
         } catch (err) { setSyncStatus('offline'); }
     }
@@ -581,15 +624,33 @@
             alert(response.error.message);
         } else if (response.data.user) {
             updateAuthUI(response.data.user);
-            pullFromSupabase(); 
+            await pullFromSupabase(); 
+            centerMapOnGSS(); // FIX 4: Center on GSS after login
             showToast("Auth Successful!");
         }
     }
 
+    /* FIX 1: Complete State & LocalForage Wipe on Logout */
     window.handleSupabaseLogout = async function() {
         await supabaseClient.auth.signOut();
-        appState.user = { isLoggedIn: false, name: "", email: "", id: null };
-        triggerPersistence();
+        
+        // 1. Wipe Offline Database completely
+        await localforage.clear();
+        
+        // 2. Hard Reset Local Memory State
+        appState = {
+            settings: { checkOrphanNode: true, unit: 'm', gpsInterval: 3, gpsAccuracy: 10, language: 'en' },
+            user: { isLoggedIn: false, name: "", email: "", id: null },
+            filters: { lines11: true, linesLT: true, poles: true, dts: true, consumers: true },
+            currentFeederCode: "1",
+            gssNodes: { "1": { code: "1", name: "132/33 kV Substation", lat: 26.9150, lng: 75.7830 } },
+            feeders: { "1": { feeder: { name: "11 kV Feeder-01", code: "1", subdivCode: "SD-01", parentGss: "1" }, poles: [], dts: [], lines: [], consumers: [] } },
+            orphanPoleIds: new Set(), activeMove: null, placementType: null, liveTrackId: null, liveMarker: null
+        };
+        
+        // 3. Clear Map Layers to prevent ghosting
+        Object.values(featureGroups).forEach(g => g.clearLayers());
+        
         document.getElementById('app-container').style.display = 'none';
         document.getElementById('auth-screen').style.display = 'flex';
         window.toggleSidebar(false);
@@ -619,25 +680,40 @@
         const { data } = await supabaseClient.auth.getSession();
         if (data && data.session && data.session.user) {
             updateAuthUI(data.session.user);
-            pullFromSupabase();
+            await pullFromSupabase();
         } else {
             document.getElementById('app-container').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'flex';
         }
     }
 
+    /* FIX 4: Center Map on Active GSS Logic */
+    function centerMapOnGSS() {
+        const net = getActiveNetwork();
+        const gss = appState.gssNodes[net.feeder.parentGss];
+        if (gss && typeof gss.lat === 'number' && typeof gss.lng === 'number') {
+            map.setView([gss.lat, gss.lng], 16);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                map.setView([pos.coords.latitude, pos.coords.longitude], 16);
+            });
+        }
+        renderEntireNetwork();
+    }
+
     function loadPersistedData(callback) {
         let loaded = false;
         localforage.getItem(DB_KEY).then(data => {
             if(loaded) return;
-            if (data && data.feeders) { appState = data; loaded = true; finalizeLoad(); }
-            else checkLocalStorage();
+            if (data && data.feeders && appState.user.isLoggedIn) { 
+                appState = data; loaded = true; finalizeLoad(); 
+            } else { checkLocalStorage(); }
         }).catch(e => { if(!loaded) checkLocalStorage(); });
 
         function checkLocalStorage() {
             try { 
                 const lsData = localStorage.getItem(DB_KEY); 
-                if(lsData) { appState = JSON.parse(lsData); loaded = true; }
+                if(lsData && appState.user.isLoggedIn) { appState = JSON.parse(lsData); loaded = true; }
             } catch(e) {}
             finalizeLoad();
         }
@@ -968,7 +1044,6 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    /* ====== MARKER CLUSTERING SETUP ====== */
     const featureGroups = { 
         gss: L.layerGroup().addTo(map), 
         lines: L.layerGroup().addTo(map), 
@@ -1052,7 +1127,6 @@
                 });
             });
 
-            // CLUSTERING OPTIMIZATION: Collect markers in arrays first
             const poleMarkers = [];
             const dtMarkers = [];
             const consMarkers = [];
@@ -1134,12 +1208,10 @@
                 });
             }
 
-            // ADD TO CLUSTERS
             featureGroups.poles.addLayers(poleMarkers);
             featureGroups.dts.addLayers(dtMarkers);
             featureGroups.consumers.addLayers(consMarkers);
 
-            // KPI BAR METRICS LOGIC
             let t11 = 0, tLT = 0; 
             net.lines.forEach(l => { 
                 if (getLineSpec(l.type).name.includes('LT')) tLT += (l.distanceMeters || 0); 
@@ -1908,29 +1980,24 @@
     }
 
     function initializeApplication() { 
+        // 1. Show splash immediately (it's already handled via HTML outside the hidden container)
+        
         loadPersistedData(async () => { 
             translateApp(); 
             
-            // Wait for session check before hiding splash
+            // 2. Await authentication check
             await checkSupabaseSession(); 
             
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => { 
-                        map.setView([pos.coords.latitude, pos.coords.longitude], 16); 
-                        renderEntireNetwork(); 
-                        setTimeout(() => { const splash = document.getElementById('splash-screen'); if(splash) splash.classList.add('hidden'); }, 800);
-                    }, 
-                    (err) => { 
-                        renderEntireNetwork(); 
-                        setTimeout(() => { const splash = document.getElementById('splash-screen'); if(splash) splash.classList.add('hidden'); }, 800);
-                    }, 
-                    { timeout: 5000, enableHighAccuracy: true }
-                );
-            } else {
-                renderEntireNetwork();
-                setTimeout(() => { const splash = document.getElementById('splash-screen'); if(splash) splash.classList.add('hidden'); }, 1800);
+            // 3. If successfully logged in, set default view to GSS
+            if (appState.user.isLoggedIn) {
+                centerMapOnGSS();
             }
+            
+            // 4. Smoothly remove splash screen
+            setTimeout(() => { 
+                const splash = document.getElementById('splash-screen'); 
+                if(splash) splash.classList.add('hidden'); 
+            }, 800);
         }); 
     }
     
