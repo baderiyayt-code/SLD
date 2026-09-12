@@ -59,10 +59,10 @@
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
 
         /* ====== SEARCH BAR ====== */
-        /* FIX 2: Added z-index: 10 here to overlay above the KPI bar */
-        .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 10; }
+        /* FIX 2: Added z-index: 9999 to aggressively overlay above the KPI bar */
+        .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 9999; }
         .search-input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
-        .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 2000; }
+        .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 10000; }
         .suggestions-panel.active { display: flex; flex-direction: column; }
         .suggestion-item { padding: 10px 12px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column;}
         .suggestion-item:last-child { border-bottom: none; }
@@ -71,7 +71,7 @@
         .sugg-desc { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;}
 
         /* ====== KPI BAR (5 items) ====== */
-        .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; pointer-events: auto; }
+        .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; pointer-events: auto; position: relative;}
         .kpi-tile { background: var(--bg-glass); backdrop-filter: blur(12px); padding: 8px 2px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 3px solid transparent;}
         .kpi-tile:nth-child(1) { border-top-color: var(--c-11kv); } .kpi-tile:nth-child(2) { border-top-color: var(--c-dt); } .kpi-tile:nth-child(3) { border-top-color: var(--c-lt); } .kpi-tile:nth-child(4) { border-top-color: #8b5cf6; } .kpi-tile:nth-child(5) { border-top-color: #ec4899; }
         .kpi-label { font-size: 0.50rem; color: var(--text-sub); font-weight: 800; text-transform: uppercase; white-space: nowrap;}
@@ -393,7 +393,7 @@
             appLanguage: "ऐप की भाषा", distUnit: "दूरी की इकाई", gpsInterval: "जीपीएस रीफ्रेश समय (सेकंड)", gpsAcc: "जीपीएस एक्यूरेसी लिमिट (मीटर)", resetData: "ऐप डेटा रीसेट करें",
             confirmLoc: "मैप सेंटर लोकेशन पक्की करें", confirmHere: "यहाँ सेट करें", cancel: "रद्द करें", setNewLoc: "नई लोकेशन सेट करें",
             toastSettings: "सेटिंग्स सेव हो गईं!", toastDel: "सफलतापूर्वक डिलीट हुआ!", toastImport: "सफलतापूर्वक इम्पोर्ट हुआ!",
-            aboutDesc: "डिस्कॉम फील्ड सर्वे ऐप जिसे पेशेवर GIS नेटवर्क मैपिंग, ऑफलाइन डेटा कलेक्शन और SLD प्लानिंग के लिए डिज़ाइन किया गया है।"
+            aboutDesc: "डिस्कॉम फील्ड सर्वे ऐप जिसे पेशेवर GIS नेटवर्क मैपिंग, offline डेटा कलेक्शन और SLD प्लानिंग के लिए डिज़ाइन किया गया है।"
         }
     };
 
@@ -689,10 +689,10 @@
     }
 
     /* ====== MAP LAYER SETUP ====== */
+    // FIX 1: Removed `preferCanvas: true` so map seamlessly uses standard SVG rendering. SVG inherently handles custom panes/Z-indexes flawlessly without vanishing bugs.
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false, 
-        preferCanvas: true, 
         rotate: true, 
         touchRotate: true, 
         shiftKeyRotate: true,
@@ -709,9 +709,9 @@
     window.toggleMapLayer = function() { 
         map.removeLayer(tileLayers[layerKeys[currentTileIndex]].layer); currentTileIndex = (currentTileIndex + 1) % layerKeys.length; 
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
+        renderEntireNetwork(); // Force refresh to guarantee consistency after switch
     }
 
-    /* FIX 1: Layer Index Corrected. Lines are 410+, Marker/Assets are 500+ */
     map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 410;
     map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 420;
     map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 430;
@@ -763,12 +763,14 @@
             });
 
             const spanBuckets = {};
+            // FIX 1 CONTINUED: Aggressively recalculating line coordinates on every render loop ensures they always map correctly to their nodes 
             net.lines.forEach(line => {
-                if (!line.coords || line.coords.length < 2) { 
-                    const c1 = getNodeCoords(line.fromNode); const c2 = getNodeCoords(line.toNode); 
-                    if (c1 && c2) { line.coords = [[c1.lat, c1.lng], [c2.lat, c2.lng]]; line.distanceMeters = window.calcDistance(c1.lat, c1.lng, c2.lat, c2.lng); } 
-                    else return; 
-                }
+                const c1 = getNodeCoords(line.fromNode); const c2 = getNodeCoords(line.toNode); 
+                if (c1 && c2) { 
+                    line.coords = [[c1.lat, c1.lng], [c2.lat, c2.lng]]; 
+                    line.distanceMeters = window.calcDistance(c1.lat, c1.lng, c2.lat, c2.lng); 
+                } else return; 
+                
                 const spec = getLineSpec(line.type); if (!f[spec.filterKey]) return;
                 const spanKey = [line.fromNode, line.toNode].sort().join('<-->'); if (!spanBuckets[spanKey]) spanBuckets[spanKey] = []; spanBuckets[spanKey].push(line);
             });
@@ -1556,14 +1558,6 @@
             ctx.fillStyle = "#ffffff"; ctx.font = "bold 20px Arial"; ctx.textAlign = "center"; ctx.fillText("GSS", gx, gy+6);
             ctx.fillStyle = "#000000"; ctx.font = "bold 24px Arial"; ctx.fillText(feederGss.name, gx, gy-40);
         }
-
-        /* FIX 3: Removed (commented out) the pole drawing loop for SLD PDFs */
-        /*
-        htPoles.forEach(p => { 
-            const dx = toX(p.lng), dy = toY(p.lat); 
-            ctx.beginPath(); ctx.arc(dx, dy, 10, 0, 2 * Math.PI); ctx.fillStyle = "#fde047"; ctx.fill(); ctx.stroke(); 
-        });
-        */
 
         net.dts.forEach(d => {
             const dtx = toX(d.lng), dty = toY(d.lat);
