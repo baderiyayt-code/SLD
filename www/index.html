@@ -558,7 +558,7 @@
         return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
     }
 
-    /* FIX 1: Flawless Prefix Coordinate Resolution */
+    /* FIX 2: Strict Node Coordinate Resolution Logic */
     function getNodeCoords(nodeId) { 
         const net = getActiveNetwork(); 
         const idStr = String(nodeId);
@@ -589,19 +589,14 @@
         return null; 
     }
 
+    /* FIX 2: Bypassed offsetting completely to enforce absolute strict snapping to actual Node Coordinates under all zoom/rotate scenarios */
     function computeParallelOffset(coords, offsetMeters) {
-        if (!coords || coords.length < 2 || offsetMeters === 0) return coords;
-        const lat1 = coords[0][0], lon1 = coords[0][1], lat2 = coords[1][0], lon2 = coords[1][1];
-        const midLat = (lat1 + lat2) / 2; const cosLat = Math.cos(midLat * Math.PI / 180);
-        const mPerDegLat = 111139, mPerDegLon = 111139 * cosLat;
-        const dx = (lon2 - lon1) * mPerDegLon, dy = (lat2 - lat1) * mPerDegLat; const len = Math.sqrt(dx * dx + dy * dy);
-        if (len === 0) return coords; const nx = -dy / len, ny = dx / len;
-        return [[lat1 + (ny * offsetMeters) / mPerDegLat, lon1 + (nx * offsetMeters) / mPerDegLon], [lat2 + (ny * offsetMeters) / mPerDegLat, lon2 + (nx * offsetMeters) / mPerDegLon]];
+        return coords; 
     }
 
     window.runOrphanNodeChecker = function() { updateOrphanStatus(); renderEntireNetwork(); showToast("Orphan Network Checked!"); }
 
-    /* FIX 2: Fully Rewritten Flawless Orphan Node Traversal using precise string prefixes */
+    /* FIX 3: Rewritten BFS to securely traverse prefixed string nodes. Immediately orphans disconnected Poles. */
     function updateOrphanStatus() {
         appState.orphanPoleIds.clear();
         const net = getActiveNetwork();
@@ -612,16 +607,19 @@
         adj[gssId] = [];
 
         net.poles.forEach(p => adj['POLE_' + p.poleNo] = []);
+        net.dts.forEach(d => adj['DT_' + d.code] = []);
+
+        // DTs sit natively on HT Poles (Implicit connection)
         net.dts.forEach(d => {
-            adj['DT_' + d.code] = [];
             if(d.parentPole) {
                 const pId = 'POLE_' + d.parentPole;
-                if(!adj[pId]) adj[pId] = [];
+                if (!adj[pId]) adj[pId] = [];
                 adj[pId].push('DT_' + d.code);
                 adj['DT_' + d.code].push(pId);
             }
         });
 
+        // Explicit Lines Connections
         net.lines.forEach(l => {
             const u = String(l.fromNode);
             const v = String(l.toNode);
@@ -631,6 +629,7 @@
             adj[v].push(u);
         });
 
+        // BFS Engine
         const visited = new Set([gssId]);
         const queue = [gssId];
 
@@ -644,14 +643,10 @@
             });
         }
 
+        // Apply Orphan flags securely
         net.poles.forEach(p => {
-            if (p.lineType === 'LT') {
-                if(!visited.has('DT_' + p.dtCode)) appState.orphanPoleIds.add(p.id);
-            } else {
-                if(!visited.has('POLE_' + p.poleNo)) appState.orphanPoleIds.add(p.id);
-            }
+            if (!visited.has('POLE_' + p.poleNo)) appState.orphanPoleIds.add(p.id);
         });
-        
         net.dts.forEach(d => {
             if (!visited.has('DT_' + d.code)) appState.orphanPoleIds.add(d.id);
         });
@@ -726,7 +721,7 @@
     }
 
     /* ====== MAP LAYER SETUP ====== */
-    /* FIX 1: preferCanvas set to FALSE. Forces standard SVG renderer which prevents rotation disconnects and maintains perfect snapping */
+    /* FIX 2: preferCanvas FALSE rigorously prevents map rotation transform bugs for SVG polylines */
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false, 
@@ -749,11 +744,12 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    /* FIX 1: Custom line panes removed entirely. Relying purely on default Leaflet layering so rotation logic affects them flawlessly */
+    /* FIX 2: Eradicated strict line panes to let Leaflet's standard SVG engine process zoom/rotation without tearing line vectors apart */
     const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
 
     map.on('move', () => { const c = map.getCenter(); document.getElementById('reticle-coordinates').innerText = `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`; });
     map.on('zoomend', () => renderEntireNetwork());
+    map.on('rotate', () => renderEntireNetwork()); // Firing natively to guarantee SVG lines clamp firmly on rotate
 
     window.openFilterModal = function() {
         const f = appState.filters;
@@ -793,7 +789,6 @@
 
             const spanBuckets = {};
             net.lines.forEach(line => {
-                // Guaranteed real-time coordinate fetch on every single render to secure perfectly attached lines
                 const c1 = getNodeCoords(line.fromNode); 
                 const c2 = getNodeCoords(line.toNode); 
                 if (c1 && c2) { 
@@ -814,7 +809,6 @@
                     const shiftedCoords = computeParallelOffset(line.coords, offsetMeters);
                     if (spec.name.includes('LT') && !showLTPoles) return;
                     
-                    /* FIX 1: Lines completely rely on Leaflet's standard renderer overlaying beneath the markers perfectly */
                     const hitPoly = L.polyline(shiftedCoords, { color: 'transparent', weight: 25 }).addTo(featureGroups.lines);
                     L.polyline(shiftedCoords, { color: spec.color, weight: spec.weight, dashArray: spec.dash, lineCap: 'round', interactive: false }).addTo(featureGroups.lines);
                     hitPoly.bindPopup(`<div style="padding:4px;"><b style="color:${spec.color};">${spec.name}</b><p style="margin:4px 0;">From-To: <b>${line.fromNode} ➔ ${line.toNode}</b></p><p style="margin:4px 0;">Distance: <b>${window.formatDistance(line.distanceMeters||0)}</b></p><button style="width:100%; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; font-weight:700;" onclick="window.deleteEntity('line','${line.id}')">Delete</button></div>`);
@@ -904,7 +898,6 @@
         } catch(err) { console.error(err); }
     }
 
-    /* ====== GSS MANAGEMENT IN SIDEBAR ====== */
     window.toggleGssFolder = function() {
         const content = document.getElementById('gssFolderContent');
         const icon = document.getElementById('gssFolderIcon');
@@ -966,7 +959,6 @@
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); window.renderGssSidebarList(); showToast(i18n[appState.settings.language].toastDel);
     }
 
-    /* ====== DYNAMIC PIN PLACEMENT ====== */
     window.openAddForm = function(type) {
         window.toggleSpeedDial(false); 
         if (type === 'POLE' || type === 'LTPOLE' || type === 'CONSUMER') { 
@@ -993,30 +985,68 @@
         document.getElementById('bottom-single-action').style.display = 'block';
     }
 
-    /* ====== GLOBAL EDIT / DELETE / MOVE LOGIC ====== */
+    /* FIX 4: Complete rewriting of Deep Cascading Deletion logic */
+    function deleteDTLogic(dtId, net) {
+        const d = net.dts.find(x => x.id === dtId);
+        if(!d) return;
+
+        // 1. Identify all child LT Poles
+        const ltPolesToRemove = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === String(d.code));
+        const ltPoleIds = ltPolesToRemove.map(p => String(p.poleNo));
+        const ltPoleNodeIds = ltPoleIds.map(pn => 'POLE_' + pn);
+
+        // 2. Eradicate all lines connected to DT and all child LT Poles
+        net.lines = net.lines.filter(l =>
+            l.fromNode !== ('DT_' + d.code) && l.toNode !== ('DT_' + d.code) &&
+            !ltPoleNodeIds.includes(String(l.fromNode)) && !ltPoleNodeIds.includes(String(l.toNode))
+        );
+
+        // 3. Purge all consumers hooked strictly to the DT, or hooked to the doomed LT Poles
+        net.consumers = net.consumers.filter(c => {
+            const isDirectToDT = (c.parentType === 'DT' && String(c.parentRef) === String(d.code));
+            const isOnRemovedLTPole = (c.parentType === 'POLE' && ltPoleIds.includes(String(c.parentRef)));
+            return !(isDirectToDT || isOnRemovedLTPole);
+        });
+
+        // 4. Exterminate the LT poles
+        net.poles = net.poles.filter(p => !ltPoleIds.includes(String(p.poleNo)));
+
+        // 5. Exterminate the DT itself
+        net.dts = net.dts.filter(x => x.id !== dtId);
+    }
+
+    function deleteLTPoleLogic(p, net) {
+        net.consumers = net.consumers.filter(c => !(c.parentType === 'POLE' && String(c.parentRef) === String(p.poleNo)));
+        net.lines = net.lines.filter(l => String(l.fromNode) !== ('POLE_'+p.poleNo) && String(l.toNode) !== ('POLE_'+p.poleNo));
+        net.poles = net.poles.filter(x => x.id !== p.id);
+    }
+
     window.deleteEntity = function(type, id) {
         const net = getActiveNetwork();
         if(!confirm("Are you sure you want to delete this item?")) return;
         saveSnapshot();
-        if (type === 'pole') {
+
+        if (type === 'line') {
+            net.lines = net.lines.filter(x => x.id !== id);
+        } else if (type === 'consumer') {
+            net.consumers = net.consumers.filter(x => x.id !== id);
+        } else if (type === 'dt') {
+            deleteDTLogic(id, net);
+        } else if (type === 'pole') {
             const p = net.poles.find(x => x.id === id);
             if (p) {
-                net.poles = net.poles.filter(x => x.id !== id);
-                net.lines = net.lines.filter(l => l.fromNode !== ('POLE_'+p.poleNo) && l.toNode !== ('POLE_'+p.poleNo));
-                net.dts = net.dts.filter(d => d.parentPole !== p.poleNo);
-                net.consumers = net.consumers.filter(c => c.parentRef !== p.poleNo);
+                if (p.lineType === 'LT') {
+                    deleteLTPoleLogic(p, net);
+                } else {
+                    // HT Pole
+                    const dtsOnPole = net.dts.filter(d => String(d.parentPole) === String(p.poleNo));
+                    dtsOnPole.forEach(dt => deleteDTLogic(dt.id, net));
+
+                    net.lines = net.lines.filter(l => l.fromNode !== ('POLE_'+p.poleNo) && l.toNode !== ('POLE_'+p.poleNo));
+                    net.poles = net.poles.filter(x => x.id !== id);
+                }
             }
-        } else if (type === 'line') net.lines = net.lines.filter(x => x.id !== id);
-        else if (type === 'dt') {
-            const d = net.dts.find(x => x.id === id);
-            net.dts = net.dts.filter(x => x.id !== id);
-            net.consumers = net.consumers.filter(c => c.parentRef !== d.code);
-            net.lines = net.lines.filter(l => l.fromNode !== ('DT_'+d.code) && l.toNode !== ('DT_'+d.code));
-            const ltPolesToRemove = net.poles.filter(p => p.dtCode === d.code).map(p => 'POLE_'+p.poleNo);
-            net.poles = net.poles.filter(p => p.dtCode !== d.code);
-            net.lines = net.lines.filter(l => !ltPolesToRemove.includes(l.fromNode) && !ltPolesToRemove.includes(l.toNode));
         }
-        else if (type === 'consumer') net.consumers = net.consumers.filter(x => x.id !== id);
         renderEntireNetwork(); triggerPersistence(); showToast(i18n[appState.settings.language].toastDel);
     }
 
@@ -1024,8 +1054,9 @@
         map.closePopup(); const net = getActiveNetwork();
         if (type === 'pole') {
             const p = net.poles.find(x => x.id === id); if (!p) return;
+            /* FIX 1: Enforced disabled, read-only field for Pole Number Editing */
             openModal(`<div class="sheet-head"><div class="sheet-title">Edit Pole</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-                <div class="form-row"><label>Pole Number*</label><input type="text" id="editPoleNo" class="form-input" value="${p.poleNo}"></div>
+                <div class="form-row"><label>Pole Number (Locked)*</label><input type="text" id="editPoleNo" class="form-input" value="${p.poleNo}" readonly disabled style="background-color:#e2e8f0; cursor:not-allowed; opacity:0.8;"></div>
                 <button class="btn-action-primary" onclick="window.saveEditedPole('${p.id}')">Save Changes</button>`);
         } else if (type === 'dt') {
             const d = net.dts.find(x => x.id === id); if (!d) return; 
@@ -1041,7 +1072,10 @@
                 <button class="btn-action-primary" onclick="window.saveEditedConsumer('${c.id}')">Save Changes</button>`);
         }
     }
-    window.saveEditedPole = function(id) { saveSnapshot(); const newNo = document.getElementById('editPoleNo').value.trim(); const net = getActiveNetwork(); const p = net.poles.find(x => x.id === id); if (!newNo) return; p.poleNo = newNo; window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
+    
+    /* FIX 1: Ignored PoleNumber Input to enforce strict immutability */
+    window.saveEditedPole = function(id) { saveSnapshot(); window.closeModal(); showToast("Pole Settings Updated"); }
+    
     window.saveEditedDT = function(id) { saveSnapshot(); const net = getActiveNetwork(); const d = net.dts.find(x => x.id === id); if (!d) return; d.code = document.getElementById('editDTCode').value.trim(); d.location = document.getElementById('editDTLocation').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
     window.saveEditedConsumer = function(id) { saveSnapshot(); const net = getActiveNetwork(); const c = net.consumers.find(x => x.id === id); if (!c) return; c.name = document.getElementById('editConsName').value.trim(); c.kno = document.getElementById('editConsKno').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
 
@@ -1077,13 +1111,20 @@
         
         if (appState.activeMove.type === 'GSS') {
             const gss = appState.gssNodes[appState.activeMove.id];
-            if(gss) { gss.lat = lat; gss.lng = lng; }
+            if(gss) { 
+                gss.lat = lat; gss.lng = lng; 
+                net.lines.forEach(l => { 
+                    if (l.fromNode == gss.code) { l.coords[0] = [lat, lng]; l.distanceMeters = window.calcDistance(lat, lng, l.coords[1][0], l.coords[1][1]); } 
+                    if (l.toNode == gss.code) { l.coords[1] = [lat, lng]; l.distanceMeters = window.calcDistance(l.coords[0][0], l.coords[0][1], lat, lng); } 
+                });
+            }
         } else {
             if (appState.activeMove.type === 'POLE') {
                 const p = net.poles.find(x => x.id === appState.activeMove.id);
                 if (p) {
                     p.lat = lat; p.lng = lng;
                     net.dts.forEach(d => { if (d.parentPole == p.poleNo) { d.lat = lat; d.lng = lng; } }); 
+                    net.lines.forEach(l => { if (l.fromNode == p.poleNo) { l.coords[0] = [lat, lng]; l.distanceMeters = window.calcDistance(lat, lng, l.coords[1][0], l.coords[1][1]); } if (l.toNode == p.poleNo) { l.coords[1] = [lat, lng]; l.distanceMeters = window.calcDistance(l.coords[0][0], l.coords[0][1], lat, lng); } });
                 }
             } 
             else if (appState.activeMove.type === 'CONSUMER') { const cons = net.consumers.find(x => x.id === appState.activeMove.id); if (cons) { cons.lat = lat; cons.lng = lng; } }
@@ -1127,7 +1168,6 @@
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Configuration Saved!");
     }
 
-    /* ====== SMART PARENTING ADD FORMS ====== */
     window.showFormModal = function(type, snapLat, snapLng) {
         const net = getActiveNetwork(); 
         const center = map.getCenter();
