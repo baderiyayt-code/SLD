@@ -66,19 +66,18 @@
         #layer-indicator { position: absolute; top: calc(75px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
         #reticle-coordinates { position: absolute; bottom: calc(105px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); pointer-events: none; z-index: 999; }
 
-        /* ====== SCREEN CENTER PIN (NEW ROBUST APPROACH) ====== */
+        /* ====== SCREEN CENTER PIN (STATIC & SIMPLE) ====== */
         #center-placement-pin {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -100%);
-            z-index: 1500; /* Overrides everything on the map */
-            pointer-events: none; /* Map panning works underneath it */
-            display: none; /* Hidden by default */
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
-            animation: floatScreenPin 1s ease-in-out infinite alternate;
+            z-index: 1500; 
+            pointer-events: none; 
+            display: none; 
+            font-size: 48px;
+            text-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        @keyframes floatScreenPin { 0% { transform: translate(-50%, -100%); } 100% { transform: translate(-50%, calc(-100% - 10px)); } }
 
         /* ====== FLOATING TOOLS ====== */
         .right-tools-stack { position: absolute; right: 12px; bottom: calc(120px + env(safe-area-inset-bottom, 0px)); z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
@@ -120,11 +119,14 @@
         @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
         /* ====== MODALS ====== */
-        .modal-overlay, #sidebarBackdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 3000; display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.2s;}
-        .modal-overlay.open, #sidebarBackdrop.open { display: flex; opacity: 1; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 3000; display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+        .modal-overlay.open { display: flex; opacity: 1; }
         .modal-sheet { width: 100%; max-width: 500px; background: var(--bg-sheet); border-radius: 24px 24px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s; }
         .modal-overlay.open .modal-sheet { transform: translateY(0); }
         .modal-sheet::before { content: ""; display: block; width: 40px; height: 4px; background: #cbd5e1; border-radius: 10px; margin: 0 auto 16px; }
+
+        #sidebarBackdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 4000; display: none; opacity: 0; transition: opacity 0.2s; }
+        #sidebarBackdrop.open { display: block; opacity: 1; }
 
         .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .sheet-title { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;}
@@ -140,7 +142,7 @@
         .btn-danger-outline { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid #ef4444; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
         /* ====== SETTINGS & SIDEBAR ====== */
-        #settings-page { position: fixed; inset: 0; background: var(--bg-base); z-index: 4000; transform: translateX(100%); transition: transform 0.2s; display: flex; flex-direction: column; }
+        #settings-page { position: fixed; inset: 0; background: var(--bg-base); z-index: 5000; transform: translateX(100%); transition: transform 0.2s; display: flex; flex-direction: column; }
         #settings-page.open { transform: translateX(0); }
         .settings-header { background: #ffffff; padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
         .settings-body { flex: 1; overflow-y: auto; padding: 16px; }
@@ -175,12 +177,12 @@
     <div id="top-bar">
         <div class="header-glass">
             <div class="header-title-group">
-                <div class="action-btn-sm" onclick="toggleSidebar(true)"><i class="fa-solid fa-bars"></i></div>
-                <select id="feederSelectHeader" class="modern-select" onchange="switchFeeder(this.value)"></select>
-                <button class="action-btn-sm" onclick="openAddNewFeederModal()"><i class="fa-solid fa-plus"></i></button>
+                <div class="action-btn-sm" onclick="window.toggleSidebar(true)"><i class="fa-solid fa-bars"></i></div>
+                <select id="feederSelectHeader" class="modern-select" onchange="window.switchFeeder(this.value)"></select>
+                <button class="action-btn-sm" onclick="window.openAddNewFeederModal()"><i class="fa-solid fa-plus"></i></button>
             </div>
             <div class="header-actions">
-                <button class="action-btn-sm bg" onclick="runOrphanNodeChecker()"><i class="fa-solid fa-network-wired" style="color:#d97706;"></i></button>
+                <button class="action-btn-sm bg" onclick="window.runOrphanNodeChecker()"><i class="fa-solid fa-network-wired" style="color:#d97706;"></i></button>
             </div>
         </div>
         <div class="kpi-row">
@@ -197,40 +199,36 @@
     <div id="map"></div>
     <div id="reticle-coordinates">0.000000, 0.000000</div>
 
-    <!-- NEW SCREEN-CENTER FLOATING PIN -->
-    <div id="center-placement-pin">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/>
-        </svg>
-    </div>
+    <!-- NEW SCREEN-CENTER STATIC PIN (📍) -->
+    <div id="center-placement-pin">📍</div>
 
     <div class="right-tools-stack">
-        <button class="round-tool-btn" onclick="toggleMapLayer()"><i class="fa-solid fa-layer-group" style="color:#0ea5e9;"></i></button>
-        <button class="round-tool-btn" id="liveTrackBtn" onclick="toggleLiveTracking()"><i class="fa-solid fa-crosshairs" style="color:#ef4444;"></i></button>
-        <button class="round-tool-btn" onclick="openFilterModal()"><i class="fa-solid fa-filter" style="color:#d97706;"></i></button>
-        <button class="round-tool-btn undo-btn" onclick="undoLastAction()"><i class="fa-solid fa-rotate-left"></i></button>
+        <button class="round-tool-btn" onclick="window.toggleMapLayer()"><i class="fa-solid fa-layer-group" style="color:#0ea5e9;"></i></button>
+        <button class="round-tool-btn" id="liveTrackBtn" onclick="window.toggleLiveTracking()"><i class="fa-solid fa-crosshairs" style="color:#ef4444;"></i></button>
+        <button class="round-tool-btn" onclick="window.openFilterModal()"><i class="fa-solid fa-filter" style="color:#d97706;"></i></button>
+        <button class="round-tool-btn undo-btn" onclick="window.undoLastAction()"><i class="fa-solid fa-rotate-left"></i></button>
     </div>
 
     <div id="speed-dial-menu">
         <div class="dial-grid">
-            <div class="dial-card" onclick="openAddForm('POLE')"><i class="fa-solid fa-grip-lines-vertical" style="color:#0ea5e9;"></i><span>HT Pole</span></div>
-            <div class="dial-card" onclick="openAddForm('LTPOLE')"><i class="fa-solid fa-grip-lines-vertical" style="color:#10b981;"></i><span>LT Pole</span></div>
-            <div class="dial-card" onclick="openAddForm('LINE')"><i class="fa-solid fa-arrow-trend-up" style="color:#2563eb;"></i><span>Line</span></div>
-            <div class="dial-card" onclick="openAddForm('DT')"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i><span>DT</span></div>
-            <div class="dial-card" onclick="openAddForm('CONSUMER')"><i class="fa-solid fa-user-plus" style="color:#3b82f6;"></i><span>Consumer</span></div>
+            <div class="dial-card" onclick="window.openAddForm('POLE')"><i class="fa-solid fa-grip-lines-vertical" style="color:#0ea5e9;"></i><span>HT Pole</span></div>
+            <div class="dial-card" onclick="window.openAddForm('LTPOLE')"><i class="fa-solid fa-grip-lines-vertical" style="color:#10b981;"></i><span>LT Pole</span></div>
+            <div class="dial-card" onclick="window.openAddForm('LINE')"><i class="fa-solid fa-arrow-trend-up" style="color:#2563eb;"></i><span>Line</span></div>
+            <div class="dial-card" onclick="window.openAddForm('DT')"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i><span>DT</span></div>
+            <div class="dial-card" onclick="window.openAddForm('CONSUMER')"><i class="fa-solid fa-user-plus" style="color:#3b82f6;"></i><span>Consumer</span></div>
         </div>
     </div>
 
     <div id="bottom-single-action">
-        <div class="center-plus-fab" id="mainFabBtn" onclick="toggleSpeedDial()"><i class="fa-solid fa-plus"></i></div>
+        <div class="center-plus-fab" id="mainFabBtn" onclick="window.toggleSpeedDial()"><i class="fa-solid fa-plus"></i></div>
     </div>
 
     <!-- SCREEN-CENTER PIN CONFIRMATION BAR -->
     <div id="placement-confirm-bar" class="floating-action-bar">
         <div><b style="color:var(--accent); font-size:1.0rem;"><i class="fa-solid fa-location-dot"></i> Confirm Map Center Location</b></div>
         <div style="display:flex; gap:8px; margin-top:4px;">
-            <button class="btn-action-primary" style="margin:0;" onclick="confirmPlacement()">Confirm Here</button>
-            <button class="btn-danger-outline" style="margin:0;" onclick="cancelPlacement()">Cancel</button>
+            <button class="btn-action-primary" style="margin:0;" onclick="window.confirmPlacement()">Confirm Here</button>
+            <button class="btn-danger-outline" style="margin:0;" onclick="window.cancelPlacement()">Cancel</button>
         </div>
     </div>
 
@@ -238,8 +236,8 @@
     <div id="move-confirm-bar" class="floating-action-bar">
         <div><b id="moveTargetTitle" style="color:var(--accent); font-size:1.0rem;">Target</b></div>
         <div style="display:flex; gap:8px; margin-top:4px;">
-            <button class="btn-action-primary" style="margin:0;" onclick="confirmObjectMove()">Set New Location</button>
-            <button class="btn-danger-outline" style="margin:0;" onclick="cancelObjectMove()">Cancel</button>
+            <button class="btn-action-primary" style="margin:0;" onclick="window.confirmObjectMove()">Set New Location</button>
+            <button class="btn-danger-outline" style="margin:0;" onclick="window.cancelObjectMove()">Cancel</button>
         </div>
     </div>
 </div>
@@ -247,42 +245,42 @@
 <!-- SETTINGS PAGE -->
 <div id="settings-page">
     <div class="settings-header">
-        <button class="action-btn-sm" style="border:none; background:transparent; font-size:1.3rem;" onclick="closeSettingsPage()"><i class="fa-solid fa-arrow-left"></i></button>
+        <button class="action-btn-sm" style="border:none; background:transparent; font-size:1.3rem;" onclick="window.closeSettingsPage()"><i class="fa-solid fa-arrow-left"></i></button>
         <h2 style="font-size:1.1rem; font-weight:800;">Settings</h2>
     </div>
     <div class="settings-body">
         <div class="settings-card">
             <div class="form-row">
                 <label>Distance Unit</label>
-                <select id="setUnit" class="form-select" onchange="autoSaveSettings()">
+                <select id="setUnit" class="form-select" onchange="window.autoSaveSettings()">
                     <option value="m" selected>Meters (m)</option>
                     <option value="km">Kilometers (km)</option>
                 </select>
             </div>
             <div class="form-row">
                 <label>GPS Polling Interval (Seconds)</label>
-                <input type="number" id="setGpsInterval" class="form-input" value="3" onchange="autoSaveSettings()">
+                <input type="number" id="setGpsInterval" class="form-input" value="3" onchange="window.autoSaveSettings()">
             </div>
             <div class="form-row" style="margin-bottom:0;">
                 <label>GPS Accuracy Threshold (Meters)</label>
-                <input type="number" id="setGpsAccuracy" class="form-input" value="10" onchange="autoSaveSettings()">
+                <input type="number" id="setGpsAccuracy" class="form-input" value="10" onchange="window.autoSaveSettings()">
             </div>
         </div>
         <div class="settings-card" style="border-color: #ef4444; background:#fef2f2;">
-            <button type="button" class="btn-danger-outline" onclick="openResetConfirmationModal()"><i class="fa-solid fa-trash-can"></i> Reset App Data</button>
+            <button type="button" class="btn-danger-outline" onclick="window.openResetConfirmationModal()"><i class="fa-solid fa-trash-can"></i> Reset App Data</button>
         </div>
     </div>
 </div>
 
 <!-- SIDEBAR -->
-<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+<div id="sidebarBackdrop" onclick="window.toggleSidebar(false)"></div>
 <div id="sidebar-drawer">
     <div class="sidebar-header-gradient">
         <img id="sidebarProfileImg" class="user-profile-img" src="" alt="Profile">
         <h3 id="userNameDisplay" style="font-size:1rem; font-weight:700; display:none; margin-top:5px;"></h3>
         <p id="userEmailDisplay" style="font-size:0.75rem; opacity:0.9; margin-top:2px; display:none;"></p>
         <div id="googleAuthBox" style="margin-top: 10px;">
-            <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com" data-callback="handleCredentialResponse"></div>
+            <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com" data-callback="window.handleCredentialResponse"></div>
             <div class="g_id_signin" data-type="standard" data-theme="filled_blue" data-shape="rectangular" data-size="medium" data-width="100%"></div>
         </div>
     </div>
@@ -290,32 +288,32 @@
     <div class="sidebar-menu-list">
         
         <!-- GSS MANAGEMENT FOLDER -->
-        <div class="menu-category-title" onclick="toggleGssFolder()" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+        <div class="menu-category-title" onclick="window.toggleGssFolder()" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
             <span>GSS Management</span> <i id="gssFolderIcon" class="fa-solid fa-chevron-down"></i>
         </div>
         <div id="gssFolderContent" style="display:none; padding-left: 5px; margin-bottom: 15px;">
-            <div class="menu-link-btn" onclick="openAddGssModal()"><i class="fa-solid fa-plus-circle" style="color:#2563eb;"></i> <span>Add New GSS</span></div>
+            <div class="menu-link-btn" onclick="window.openAddGssModal()"><i class="fa-solid fa-plus-circle" style="color:#2563eb;"></i> <span>Add New GSS</span></div>
             <div id="gssListContainer"></div>
         </div>
 
-        <div class="menu-link-btn" onclick="openFeederConfigModal()" style="background:#eff6ff; color:#1d4ed8;">
+        <div class="menu-link-btn" onclick="window.openFeederConfigModal()" style="background:#eff6ff; color:#1d4ed8;">
             <i class="fa-solid fa-tower-broadcast"></i> <span>Manage Feeders</span>
         </div>
 
         <div class="menu-category-title">Export (Save to Device)</div>
-        <div class="menu-link-btn" onclick="generateCadSLDPdf()"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> <span>Export SLD PDF</span></div>
-        <div class="menu-link-btn" onclick="exportToAutoCAD_DXF()"><i class="fa-solid fa-draw-polygon" style="color:#10b981;"></i> <span>Export DXF</span></div>
-        <div class="menu-link-btn" onclick="exportToGoogleEarth_KML()"><i class="fa-solid fa-earth-americas" style="color:#0ea5e9;"></i> <span>Export styled KML</span></div>
-        <div class="menu-link-btn" onclick="exportDataToCSV()"><i class="fa-solid fa-file-csv" style="color:#f59e0b;"></i> <span>Export CSV (GE Ready)</span></div>
+        <div class="menu-link-btn" onclick="window.generateCadSLDPdf()"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> <span>Export SLD PDF</span></div>
+        <div class="menu-link-btn" onclick="window.exportToAutoCAD_DXF()"><i class="fa-solid fa-draw-polygon" style="color:#10b981;"></i> <span>Export DXF</span></div>
+        <div class="menu-link-btn" onclick="window.exportToGoogleEarth_KML()"><i class="fa-solid fa-earth-americas" style="color:#0ea5e9;"></i> <span>Export styled KML</span></div>
+        <div class="menu-link-btn" onclick="window.exportDataToCSV()"><i class="fa-solid fa-file-csv" style="color:#f59e0b;"></i> <span>Export CSV (GE Ready)</span></div>
 
         <div class="menu-category-title">Import</div>
         <label class="menu-link-btn">
             <i class="fa-solid fa-file-import" style="color:#8b5cf6;"></i><span>Import App Data</span>
-            <input type="file" id="csvFileInput" accept=".csv,text/csv,.json,application/json" style="display:none;" onchange="handleImportChoice(event)">
+            <input type="file" id="csvFileInput" accept=".csv,text/csv,.json,application/json" style="display:none;" onchange="window.handleImportChoice(event)">
         </label>
 
         <div class="menu-category-title">System</div>
-        <div class="menu-link-btn" onclick="openSettingsPage()"><i class="fa-solid fa-gear" style="color:#64748b;"></i><span>Settings</span></div>
+        <div class="menu-link-btn" onclick="window.openSettingsPage()"><i class="fa-solid fa-gear" style="color:#64748b;"></i><span>Settings</span></div>
     </div>
 </div>
 
@@ -417,6 +415,7 @@
 
     window.openModal = function(html) { document.getElementById('modalSheetContent').innerHTML = html; document.getElementById('formModalOverlay').classList.add('open'); }
     window.closeModal = function() { document.getElementById('formModalOverlay').classList.remove('open'); }
+    
     window.openSettingsPage = function() { 
         window.toggleSidebar(false); 
         document.getElementById('setUnit').value = appState.settings.unit || 'm';
@@ -435,23 +434,27 @@
         } 
     }
 
-    function getLineSpec(type) {
-        const t = (type || '').toUpperCase();
-        if (t.includes('LT')) return { name: 'LT LINE', color: '#10b981', weight: 2.5, dash: null, filterKey: 'linesLT' };
-        return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
-    }
-
-    function calcDistance(lat1, lon1, lat2, lon2) {
+    window.calcDistance = function(lat1, lon1, lat2, lon2) {
         const R = 6371e3; const p1 = lat1 * Math.PI / 180, p2 = lat2 * Math.PI / 180;
         const dp = (lat2 - lat1) * Math.PI / 180, dl = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dp/2)**2 + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    function formatDistance(m) { 
+    window.formatDistance = function(m) { 
         const unit = appState.settings.unit || 'm';
         if (unit === 'km') return (m / 1000).toFixed(3) + ' KM';
         return m.toFixed(1) + ' M';
+    }
+
+    window.sortByDistance = function(nodes, lat, lng) {
+        return nodes.slice().sort((a, b) => window.calcDistance(lat, lng, a.lat, a.lng) - window.calcDistance(lat, lng, b.lat, b.lng));
+    }
+
+    function getLineSpec(type) {
+        const t = (type || '').toUpperCase();
+        if (t.includes('LT')) return { name: 'LT LINE', color: '#10b981', weight: 2.5, dash: null, filterKey: 'linesLT' };
+        return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
     }
 
     function getNodeCoords(nodeId) { 
@@ -583,7 +586,7 @@
             net.lines.forEach(line => {
                 if (!line.coords || line.coords.length < 2) { 
                     const c1 = getNodeCoords(line.fromNode); const c2 = getNodeCoords(line.toNode); 
-                    if (c1 && c2) { line.coords = [[c1.lat, c1.lng], [c2.lat, c2.lng]]; line.distanceMeters = calcDistance(c1.lat, c1.lng, c2.lat, c2.lng); } 
+                    if (c1 && c2) { line.coords = [[c1.lat, c1.lng], [c2.lat, c2.lng]]; line.distanceMeters = window.calcDistance(c1.lat, c1.lng, c2.lat, c2.lng); } 
                     else return; 
                 }
                 const spec = getLineSpec(line.type); if (!f[spec.filterKey]) return;
@@ -599,7 +602,7 @@
                     if (isLT && !showLTPoles) return;
                     const hitPoly = L.polyline(shiftedCoords, { color: 'transparent', weight: 25, pane: targetPane }).addTo(featureGroups.lines);
                     L.polyline(shiftedCoords, { color: spec.color, weight: spec.weight, dashArray: spec.dash, lineCap: 'round', interactive: false, pane: targetPane }).addTo(featureGroups.lines);
-                    hitPoly.bindPopup(`<div style="padding:4px;"><b style="color:${spec.color};">${spec.name}</b><p style="margin:4px 0;">From-To: <b>${line.fromNode} ➔ ${line.toNode}</b></p><p style="margin:4px 0;">Distance: <b>${formatDistance(line.distanceMeters||0)}</b></p><button style="width:100%; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; font-weight:700;" onclick="window.deleteEntity('line','${line.id}')">Delete</button></div>`);
+                    hitPoly.bindPopup(`<div style="padding:4px;"><b style="color:${spec.color};">${spec.name}</b><p style="margin:4px 0;">From-To: <b>${line.fromNode} ➔ ${line.toNode}</b></p><p style="margin:4px 0;">Distance: <b>${window.formatDistance(line.distanceMeters||0)}</b></p><button style="width:100%; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px; font-weight:700;" onclick="window.deleteEntity('line','${line.id}')">Delete</button></div>`);
                 });
             });
 
@@ -622,7 +625,6 @@
                     if (!d.lat || !d.lng) { const p = net.poles.find(x => x.poleNo == d.parentPole); if (p) { d.lat = p.lat; d.lng = p.lng; } }
                     if (d.lat && d.lng) {
                         const m = L.marker([d.lat, d.lng], { icon: L.divIcon({ className: 'dt-square-icon' + (isOrphan ? ' orphan-pulse' : ''), html: `${d.rating}`, iconSize: [22,22], iconAnchor: [11,11] }), pane: 'dtPane' });
-                        // DT MOVE OPTION COMPLETELY REMOVED
                         m.bindPopup(`<div style="padding:4px;"><b style="color:#d97706;">DT: ${d.code}</b><p style="margin:4px 0;">Rating: ${d.rating} kVA<br>Parent Pole: ${d.parentPole}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#eff6ff; border:none; border-radius:6px;" onclick="window.openEditModal('dt','${d.id}')">Edit</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="window.deleteEntity('dt','${d.id}')">Delete</button></div></div>`);
                         featureGroups.dts.addLayer(m);
                     }
@@ -640,7 +642,6 @@
 
                     if (!c.lat || !c.lng) { c.lat = parentCoord.lat + 0.0001; c.lng = parentCoord.lng + 0.0001; }
                     if (f.poles && currentZoom >= 16 && parentCoord) { 
-                        // Thin, black, dashed line for Consumer connectivity
                         L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#000000', weight: 1.5, dashArray: '2,4', opacity: 0.7, pane: 'bgLinesPane' }).addTo(featureGroups.consumerLines); 
                     }
                     
@@ -651,7 +652,7 @@
             }
 
             let tLine = 0; net.lines.forEach(l => { if (getLineSpec(l.type).name.includes('11')) tLine += (l.distanceMeters || 0); });
-            if(document.getElementById('kpiLength')) document.getElementById('kpiLength').innerText = formatDistance(tLine);
+            if(document.getElementById('kpiLength')) document.getElementById('kpiLength').innerText = window.formatDistance(tLine);
             let tLoad = 0; net.dts.forEach(d => tLoad += parseFloat(d.rating || 0));
             document.getElementById('kpiLoad').innerText = `${tLoad} kVA`; document.getElementById('kpiDT').innerText = net.dts.length; document.getElementById('kpiConsumers').innerText = net.consumers.length;
             const sel = document.getElementById('feederSelectHeader'); if(sel) sel.innerHTML = Object.keys(appState.feeders).map(code => `<option value="${code}" ${code === appState.currentFeederCode ? 'selected':''}>${appState.feeders[code].feeder.name}</option>`).join('');
@@ -684,7 +685,7 @@
         const code = document.getElementById('inpGssCode').value.trim(); const name = document.getElementById('inpGssName').value.trim();
         if(!code || !name) return alert("Fill required fields"); const center = map.getCenter();
         appState.gssNodes[code] = { code, name, lat: parseFloat(center.lat.toFixed(6)), lng: parseFloat(center.lng.toFixed(6)) };
-        closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("GSS Added");
+        window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("GSS Added");
     }
 
     window.relocateGss = function(code) {
@@ -706,21 +707,20 @@
         const inputVal = document.getElementById('inpDeleteGssConfirm').value.trim();
         if(inputVal !== code) return alert("Code does not match. Deletion cancelled.");
         delete appState.gssNodes[code];
-        closeModal(); renderEntireNetwork(); triggerPersistence(); window.renderGssSidebarList(); showToast("GSS Deleted Successfully");
+        window.closeModal(); renderEntireNetwork(); triggerPersistence(); window.renderGssSidebarList(); showToast("GSS Deleted Successfully");
     }
 
-    /* ====== DYNAMIC PIN PLACEMENT (SCREEN CENTER) LOGIC ====== */
+    /* ====== DYNAMIC PIN PLACEMENT (STATIC NO-ANIMATION PIN) ====== */
     window.openAddForm = function(type) {
         window.toggleSpeedDial(false); 
         
-        // Only show pin for POLE, LTPOLE, and CONSUMER. Lines & DT bypass the pin.
+        // ONLY show pin for POLE, LTPOLE, and CONSUMER. Lines & DT bypass the pin.
         if (type === 'POLE' || type === 'LTPOLE' || type === 'CONSUMER') { 
             appState.placementType = type;
             
             // Show the static screen-center pin
             document.getElementById('center-placement-pin').style.display = 'block';
             
-            // Hide standard buttons, show confirm bar
             document.getElementById('bottom-single-action').style.display = 'none';
             document.getElementById('placement-confirm-bar').style.display = 'flex';
         } else {
@@ -729,12 +729,10 @@
     }
 
     window.confirmPlacement = function() {
-        // Hide the pin and confirm bar
         document.getElementById('center-placement-pin').style.display = 'none';
         document.getElementById('placement-confirm-bar').style.display = 'none';
         document.getElementById('bottom-single-action').style.display = 'block';
         
-        // Grab exactly what's currently in the center of the map
         const center = map.getCenter();
         const lat = parseFloat(center.lat.toFixed(6)); 
         const lng = parseFloat(center.lng.toFixed(6));
@@ -795,9 +793,9 @@
                 <button class="btn-action-primary" onclick="window.saveEditedConsumer('${c.id}')">Save Changes</button>`);
         }
     }
-    window.saveEditedPole = function(id) { saveSnapshot(); const newNo = document.getElementById('editPoleNo').value.trim(); const net = getActiveNetwork(); const p = net.poles.find(x => x.id === id); if (!newNo) return; p.poleNo = newNo; closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
-    window.saveEditedDT = function(id) { saveSnapshot(); const net = getActiveNetwork(); const d = net.dts.find(x => x.id === id); if (!d) return; d.code = document.getElementById('editDTCode').value.trim(); closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
-    window.saveEditedConsumer = function(id) { saveSnapshot(); const net = getActiveNetwork(); const c = net.consumers.find(x => x.id === id); if (!c) return; c.name = document.getElementById('editConsName').value.trim(); c.kno = document.getElementById('editConsKno').value.trim(); closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
+    window.saveEditedPole = function(id) { saveSnapshot(); const newNo = document.getElementById('editPoleNo').value.trim(); const net = getActiveNetwork(); const p = net.poles.find(x => x.id === id); if (!newNo) return; p.poleNo = newNo; window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
+    window.saveEditedDT = function(id) { saveSnapshot(); const net = getActiveNetwork(); const d = net.dts.find(x => x.id === id); if (!d) return; d.code = document.getElementById('editDTCode').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
+    window.saveEditedConsumer = function(id) { saveSnapshot(); const net = getActiveNetwork(); const c = net.consumers.find(x => x.id === id); if (!c) return; c.name = document.getElementById('editConsName').value.trim(); c.kno = document.getElementById('editConsKno').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
 
     window.startObjectMove = function(type, id, title) {
         map.closePopup(); appState.activeMove = { type, id };
@@ -823,8 +821,8 @@
             if(gss) { 
                 gss.lat = lat; gss.lng = lng; 
                 net.lines.forEach(l => { 
-                    if (l.fromNode == gss.code) { l.coords[0] = [lat, lng]; l.distanceMeters = calcDistance(lat, lng, l.coords[1][0], l.coords[1][1]); } 
-                    if (l.toNode == gss.code) { l.coords[1] = [lat, lng]; l.distanceMeters = calcDistance(l.coords[0][0], l.coords[0][1], lat, lng); } 
+                    if (l.fromNode == gss.code) { l.coords[0] = [lat, lng]; l.distanceMeters = window.calcDistance(lat, lng, l.coords[1][0], l.coords[1][1]); } 
+                    if (l.toNode == gss.code) { l.coords[1] = [lat, lng]; l.distanceMeters = window.calcDistance(l.coords[0][0], l.coords[0][1], lat, lng); } 
                 });
             }
         } else {
@@ -833,7 +831,7 @@
                 if (p) {
                     p.lat = lat; p.lng = lng;
                     net.dts.forEach(d => { if (d.parentPole == p.poleNo) { d.lat = lat; d.lng = lng; } }); 
-                    net.lines.forEach(l => { if (l.fromNode == p.poleNo) { l.coords[0] = [lat, lng]; l.distanceMeters = calcDistance(lat, lng, l.coords[1][0], l.coords[1][1]); } if (l.toNode == p.poleNo) { l.coords[1] = [lat, lng]; l.distanceMeters = calcDistance(l.coords[0][0], l.coords[0][1], lat, lng); } });
+                    net.lines.forEach(l => { if (l.fromNode == p.poleNo) { l.coords[0] = [lat, lng]; l.distanceMeters = window.calcDistance(lat, lng, l.coords[1][0], l.coords[1][1]); } if (l.toNode == p.poleNo) { l.coords[1] = [lat, lng]; l.distanceMeters = window.calcDistance(l.coords[0][0], l.coords[0][1], lat, lng); } });
                 }
             } 
             else if (appState.activeMove.type === 'CONSUMER') { const cons = net.consumers.find(x => x.id === appState.activeMove.id); if (cons) { cons.lat = lat; cons.lng = lng; } }
@@ -855,7 +853,7 @@
         const code = document.getElementById('newFdrCode').value.trim(), name = document.getElementById('newFdrName').value.trim(), gss = document.getElementById('newFdrGss').value;
         if (!code || !name) return alert("Fill required fields"); 
         appState.feeders[code] = { feeder: { name, code, subdivCode: "SD-01", parentGss: gss }, poles: [], dts: [], lines: [], consumers: [] };
-        appState.currentFeederCode = code; closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("New Feeder Created!");
+        appState.currentFeederCode = code; window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("New Feeder Created!");
     }
 
     window.openFeederConfigModal = function() {
@@ -870,13 +868,7 @@
         const net = getActiveNetwork();
         net.feeder.name = document.getElementById('cfgFeederName').value; 
         net.feeder.parentGss = document.getElementById('cfgParentGss').value; 
-        closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Configuration Saved!");
-    }
-
-    function findNearestNode(lat, lng, validNodes) {
-        let nearest = null, minDist = Infinity;
-        validNodes.forEach(node => { const dist = calcDistance(lat, lng, node.lat, node.lng); if (dist < minDist) { minDist = dist; nearest = node; } });
-        return nearest;
+        window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Configuration Saved!");
     }
 
     /* ====== SMART PARENTING ADD FORMS ====== */
@@ -895,9 +887,10 @@
                 <button class="btn-action-primary" onclick="window.saveNewPole()">Save HT Pole</button>`);
         } else if (type === 'LTPOLE') {
             if (net.dts.length === 0) return alert("You must add a DT first before adding an LT Pole!");
-            const dtList = net.dts.map(d => ({ id: d.code, lat: d.lat, lng: d.lng }));
-            const nearestDT = findNearestNode(snapLat, snapLng, dtList);
-            const dtOpts = net.dts.map(d => `<option value="${d.code}" ${nearestDT && nearestDT.id==d.code?'selected':''}>DT: ${d.code}</option>`).join('');
+            
+            // Auto Sort DTs by proximity
+            let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
+            const dtOpts = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id} (${window.formatDistance(window.calcDistance(snapLat, snapLng, d.lat, d.lng))})</option>`).join('');
 
             openModal(`<div class="sheet-head"><div class="sheet-title">Add LT Pole</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Associated DT*</label><select id="inpLTPoleDT" class="form-select">${dtOpts}</select></div>
@@ -906,33 +899,32 @@
                 <button class="btn-action-primary" onclick="window.saveNewLTPole()">Save LT Pole</button>`);
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
-            
-            const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: p.poleNo, lat: p.lat, lng: p.lng}));
-            const feederGss = appState.gssNodes[net.feeder.parentGss];
-            if(feederGss) htNodes.push({id: feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
-            let nearestHT = findNearestNode(snapLat, snapLng, htNodes);
-            let defaultFrom = nearestHT ? nearestHT.id : '';
-
             openModal(`<div class="sheet-head"><div class="sheet-title">Add Line</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Line Type*</label><select id="inpLineType" class="form-select" onchange="window.filterLineNodes()"><option value="11 KV LINE" selected>11 KV Line</option><option value="LT LINE">LT Line</option></select></div>
                 <div id="ltLineDTSelector" style="display:none; background:#f1f5f9; padding:8px; border-radius:8px; margin-bottom:12px;">
                     <label style="font-size:0.75rem; font-weight:700;">Select DT for LT Line Routing*</label>
                     <select id="inpTargetDT" class="form-select" onchange="window.filterLineNodes()"></select>
                 </div>
-                <input type="hidden" id="inpDefaultFrom" value="${defaultFrom}">
                 <div class="form-grid-2">
                     <div class="form-row"><label>From Node*</label><select id="inpFromNode" class="form-select" onchange="window.syncLineToSelect()"></select></div>
                     <div class="form-row"><label>To Node*</label><select id="inpToNode" class="form-select"></select></div>
                 </div>
                 <button class="btn-action-primary" onclick="window.saveNewLine()">Save Line</button>`);
             setTimeout(() => { 
-                document.getElementById('inpTargetDT').innerHTML = net.dts.map(d => `<option value="${d.code}">DT: ${d.code}</option>`).join('');
+                let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), center.lat, center.lng);
+                document.getElementById('inpTargetDT').innerHTML = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id}</option>`).join('');
                 window.filterLineNodes(); 
             }, 30);
         } else if (type === 'DT') {
-            const parentOpts = `<option value="${net.feeder.code}">Feeder Root (${net.feeder.code})</option>` + net.poles.filter(p => p.lineType !== 'LT').map(p => `<option value="${p.poleNo}">HT Pole ${p.poleNo}</option>`).join('');
+            // Sort parent HT Poles by distance
+            let parentNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: p.poleNo, title: 'HT Pole '+p.poleNo, lat: p.lat, lng: p.lng}));
+            const feederGss = appState.gssNodes[net.feeder.parentGss];
+            if(feederGss) parentNodes.push({id: feederGss.code, title: 'GSS '+feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
+            parentNodes = window.sortByDistance(parentNodes, snapLat, snapLng);
+            const parentOpts = parentNodes.map(p => `<option value="${p.id}">${p.title} (${window.formatDistance(window.calcDistance(snapLat, snapLng, p.lat, p.lng))})</option>`).join('');
+
             openModal(`<div class="sheet-head"><div class="sheet-title">Add DT</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-                <div class="form-row"><label>Connected To (Parent HT Pole)*</label><select id="inpDTParent" class="form-select">${parentOpts}</select></div>
+                <div class="form-row"><label>Connected To (Parent HT Node)*</label><select id="inpDTParent" class="form-select">${parentOpts}</select></div>
                 <div class="form-grid-2"><div class="form-row"><label>DT Code*</label><input type="number" id="inpDTCode" class="form-input" value="${Math.floor(Math.random()*9000)}"></div><div class="form-row"><label>Phase*</label><select id="inpDTPhase" class="form-select" onchange="window.updateDTRatingDropdowns('inpDTPhase', 'inpDTRating')"><option value="Three Phase" selected>Three Phase</option><option value="Single Phase">Single Phase</option></select></div></div>
                 <div class="form-row"><label>Rating (kVA)*</label><select id="inpDTRating" class="form-select"></select></div>
                 <button class="btn-action-primary" onclick="window.saveNewDT()">Save DT</button>`);
@@ -940,24 +932,13 @@
         } else if (type === 'CONSUMER') {
             if (net.dts.length === 0) return alert("Must have at least one DT to connect Consumer!");
             
-            const ltPoles = net.poles.filter(p => p.lineType === 'LT');
-            let nearestLTPole = findNearestNode(snapLat, snapLng, ltPoles.map(p => ({id: p.poleNo, lat: p.lat, lng: p.lng})));
-            
-            let defaultDT = '', defaultParent = '';
-            if (nearestLTPole) {
-                const poleObj = net.poles.find(p => p.poleNo === nearestLTPole.id);
-                defaultDT = poleObj.dtCode; defaultParent = nearestLTPole.id;
-            } else {
-                 const nearestDT = findNearestNode(snapLat, snapLng, net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})));
-                 if(nearestDT) { defaultDT = nearestDT.id; defaultParent = nearestDT.id; }
-            }
-
-            const dtOpts = net.dts.map(d => `<option value="${d.code}" ${defaultDT==d.code?'selected':''}>DT: ${d.code}</option>`).join('');
+            // Sort DTs globally for the first dropdown based on location
+            let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
+            const dtOpts = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id} (${window.formatDistance(window.calcDistance(snapLat, snapLng, d.lat, d.lng))})</option>`).join('');
 
             openModal(`<div class="sheet-head"><div class="sheet-title">Add Consumer</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Select Parent DT*</label><select id="inpConsDT" class="form-select" onchange="window.filterConsumerPoles()">${dtOpts}</select></div>
                 <div class="form-row"><label>Connects To (LT Pole / DT)*</label><select id="inpConsParent" class="form-select"></select></div>
-                <input type="hidden" id="inpDefaultConsParent" value="${defaultParent}">
                 <div class="form-grid-2"><div class="form-row"><label>K-Number*</label><input type="number" id="inpConsKno" class="form-input"></div><div class="form-row"><label>Load</label><input type="text" id="inpConsLoad" class="form-input" value="1 kW"></div></div>
                 <div class="form-row"><label>Consumer Name*</label><input type="text" id="inpConsName" class="form-input"></div>
                 <input type="hidden" id="inpLat" value="${snapLat}"><input type="hidden" id="inpLng" value="${snapLng}">
@@ -977,45 +958,72 @@
     }
 
     window.filterConsumerPoles = function() {
-        const net = getActiveNetwork(); const selectedDT = document.getElementById('inpConsDT').value;
-        const defaultParent = document.getElementById('inpDefaultConsParent').value;
-        let opts = `<option value="${selectedDT}" ${defaultParent==selectedDT?'selected':''}>Direct to DT: ${selectedDT}</option>`;
-        net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT).forEach(p => { 
-            opts += `<option value="${p.poleNo}" ${defaultParent==p.poleNo?'selected':''}>LT Pole: ${p.poleNo}</option>`; 
-        });
-        document.getElementById('inpConsParent').innerHTML = opts;
+        const net = getActiveNetwork(); 
+        const selectedDT = document.getElementById('inpConsDT').value;
+        const centerLat = parseFloat(document.getElementById('inpLat').value);
+        const centerLng = parseFloat(document.getElementById('inpLng').value);
+        
+        let nodes = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: p.poleNo}));
+        const dtObj = net.dts.find(d => d.code == selectedDT);
+        if(dtObj) nodes.push({id: selectedDT, title: 'Direct to DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
+        
+        // Sort LT poles proximity to the placement pin
+        nodes = window.sortByDistance(nodes, centerLat, centerLng);
+        
+        document.getElementById('inpConsParent').innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(centerLat, centerLng, n.lat, n.lng))})</option>`).join('');
     }
 
     window.filterLineNodes = function() {
         const type = document.getElementById('inpLineType').value; const net = getActiveNetwork();
         const fromSel = document.getElementById('inpFromNode'); const dtSelectorBox = document.getElementById('ltLineDTSelector');
-        const defaultFrom = document.getElementById('inpDefaultFrom').value;
+        const center = map.getCenter();
 
         if (type.includes('LT')) {
-            dtSelectorBox.style.display = 'block'; const selectedDT = document.getElementById('inpTargetDT').value; if(!selectedDT) return;
-            let opts = `<option value="${selectedDT}">DT: ${selectedDT}</option>`;
-            net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT).forEach(p => { opts += `<option value="${p.poleNo}">LT Pole: ${p.poleNo}</option>`; });
-            fromSel.innerHTML = opts;
+            dtSelectorBox.style.display = 'block'; 
+            const selectedDT = document.getElementById('inpTargetDT').value; 
+            if(!selectedDT) return;
+            
+            let nodes = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: p.poleNo}));
+            const dtObj = net.dts.find(d => d.code == selectedDT);
+            if(dtObj) nodes.push({id: selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
+            
+            nodes = window.sortByDistance(nodes, center.lat, center.lng);
+            fromSel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
         } else {
             dtSelectorBox.style.display = 'none';
+            let nodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({...p, title: 'HT Pole '+p.poleNo, id: p.poleNo}));
             const parentGss = appState.gssNodes[net.feeder.parentGss];
-            let opts = parentGss ? `<option value="${parentGss.code}" ${defaultFrom==parentGss.code?'selected':''}>GSS (${parentGss.code})</option>` : '';
-            net.poles.filter(p => p.lineType !== 'LT').forEach(p => { opts += `<option value="${p.poleNo}" ${defaultFrom==p.poleNo?'selected':''}>HT Pole ${p.poleNo}</option>`; });
-            fromSel.innerHTML = opts;
+            if (parentGss) nodes.push({id: parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
+            
+            nodes = window.sortByDistance(nodes, center.lat, center.lng);
+            fromSel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
         }
         window.syncLineToSelect();
     }
 
     window.syncLineToSelect = function() {
-        const type = document.getElementById('inpLineType').value; const fromVal = document.getElementById('inpFromNode').value, toSel = document.getElementById('inpToNode');
-        const net = getActiveNetwork(); let opts = '';
+        const type = document.getElementById('inpLineType').value; 
+        const fromVal = document.getElementById('inpFromNode').value; 
+        const toSel = document.getElementById('inpToNode');
+        const net = getActiveNetwork(); 
+        const center = map.getCenter();
+        
+        let nodes = [];
         if (type.includes('LT')) {
             const selectedDT = document.getElementById('inpTargetDT').value;
-            net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT && p.poleNo != fromVal).forEach(p => { opts += `<option value="${p.poleNo}">LT Pole: ${p.poleNo}</option>`; });
+            nodes = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == selectedDT && p.poleNo != fromVal).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: p.poleNo}));
+            if(selectedDT != fromVal) {
+                const dtObj = net.dts.find(d => d.code == selectedDT);
+                if(dtObj) nodes.push({id: selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
+            }
         } else {
-            net.poles.filter(p => p.lineType !== 'LT' && p.poleNo != fromVal).forEach(p => { opts += `<option value="${p.poleNo}">HT Pole ${p.poleNo}</option>`; });
+            nodes = net.poles.filter(p => p.lineType !== 'LT' && p.poleNo != fromVal).map(p => ({...p, title: 'HT Pole '+p.poleNo, id: p.poleNo}));
+            const parentGss = appState.gssNodes[net.feeder.parentGss];
+            if (parentGss && parentGss.code != fromVal) nodes.push({id: parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
         }
-        toSel.innerHTML = opts; 
+        
+        nodes = window.sortByDistance(nodes, center.lat, center.lng);
+        toSel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join(''); 
     }
 
     window.saveNewPole = function() { 
@@ -1050,7 +1058,7 @@
         if(existingLine) return alert("A line already exists between these two nodes!");
 
         const c1 = getNodeCoords(from), c2 = getNodeCoords(to); 
-        if(!c1 || !c2) return alert("Invalid node coordinates!"); const dist = calcDistance(c1.lat, c1.lng, c2.lat, c2.lng); 
+        if(!c1 || !c2) return alert("Invalid node coordinates!"); const dist = window.calcDistance(c1.lat, c1.lng, c2.lat, c2.lng); 
         net.lines.push({ id: 'LN_'+Date.now(), type: spec.name, fromNode: from, toNode: to, distanceMeters: dist, coords: [[c1.lat, c1.lng], [c2.lat, c2.lng]] }); 
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Line added successfully!");
     }
@@ -1175,7 +1183,7 @@
         dxf += "0\nENDSEC\n0\nEOF\n"; smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.dxf`, dxf, "application/dxf"); 
     }
     
-    // KML EXPORT FIX: STRICT XML ENCODING
+    // KML EXPORT: NOW INCLUDES DT & GSS PLACEMARKS
     window.exportToGoogleEarth_KML = function() { 
         window.toggleSidebar(false); 
         const feederName = escapeXml(getActiveNetwork().feeder.name);
@@ -1183,7 +1191,10 @@
         
         kml += `<Style id="style-11kv"><LineStyle><color>ffeb6325</color><width>4</width></LineStyle></Style>\n`; 
         kml += `<Style id="style-lt"><LineStyle><color>ff81b910</color><width>3</width></LineStyle></Style>\n`;   
+        kml += `<Style id="style-dt"><IconStyle><Icon><href>http://maps.google.com/mapfiles/kml/shapes/triangle.png</href></Icon></IconStyle></Style>\n`;
+        kml += `<Style id="style-gss"><IconStyle><Icon><href>http://maps.google.com/mapfiles/kml/shapes/polygon.png</href></Icon></IconStyle></Style>\n`;
 
+        // 1. Plot Lines
         getActiveNetwork().lines.forEach(l => { 
             if (l.coords && l.coords[0] && l.coords[1]) {
                 let styleId = 'style-11kv';
@@ -1191,6 +1202,21 @@
                 kml += `<Placemark>\n<name>${escapeXml(l.type)}</name>\n<styleUrl>#${styleId}</styleUrl>\n<LineString>\n<coordinates>\n${l.coords[0][1]},${l.coords[0][0]},0 \n${l.coords[1][1]},${l.coords[1][0]},0\n</coordinates>\n</LineString>\n</Placemark>\n`; 
             }
         }); 
+
+        // 2. Plot DT Points
+        getActiveNetwork().dts.forEach(d => {
+            if (d.lat && d.lng) {
+                kml += `<Placemark>\n<name>DT ${escapeXml(d.code)}</name>\n<description>Rating: ${d.rating}kVA</description>\n<styleUrl>#style-dt</styleUrl>\n<Point>\n<coordinates>${d.lng},${d.lat},0</coordinates>\n</Point>\n</Placemark>\n`;
+            }
+        });
+
+        // 3. Plot GSS Points
+        Object.values(appState.gssNodes).forEach(g => {
+            if (g.lat && g.lng) {
+                kml += `<Placemark>\n<name>GSS ${escapeXml(g.name)}</name>\n<description>Code: ${escapeXml(g.code)}</description>\n<styleUrl>#style-gss</styleUrl>\n<Point>\n<coordinates>${g.lng},${g.lat},0</coordinates>\n</Point>\n</Placemark>\n`;
+            }
+        });
+
         kml += "</Document>\n</kml>"; 
         smartExportAskLocation(`${getActiveNetwork().feeder.name.replace(/\s+/g, '_')}.kml`, kml, "application/vnd.google-earth.kml+xml"); 
     }
@@ -1239,7 +1265,7 @@
             const angle = Math.atan2(y2 - y1, x2 - x1);
             ctx.save(); ctx.translate(midX, midY); ctx.rotate(angle);
             ctx.fillStyle = "#1e293b"; ctx.font = "bold 18px Arial"; ctx.textAlign = "center";
-            ctx.fillText(formatDistance(l.distanceMeters || 0), 0, -8);
+            ctx.fillText(window.formatDistance(l.distanceMeters || 0), 0, -8);
             ctx.restore();
         });
 
