@@ -53,18 +53,14 @@
         
         .header-glass { display: flex; justify-content: space-between; align-items: center; background: var(--bg-glass); backdrop-filter: blur(16px); padding: 10px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; }
         .header-title-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-        
-        /* UI FIX: Increased max-width for modern-select */
         .modern-select { appearance: none; background: #f1f5f9; color: var(--text-main); border: 1px solid transparent; padding: 8px 30px 8px 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; outline: none; cursor: pointer; max-width: 160px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
-        
         .header-actions { display: flex; gap: 6px; }
-        
-        /* UI FIX: Increased touch target size for mobile to 44px */
         .action-btn-sm { width: 44px; height: 44px; border-radius: var(--radius-md); background: transparent; color: var(--accent); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; pointer-events: auto; transition: transform 0.1s ease; }
         .action-btn-sm:active { transform: scale(0.92); opacity: 0.8; }
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
 
         /* ====== SEARCH BAR ====== */
+        /* BUG FIX: Superior z-index context relative to the KPI bar for smooth overlays */
         .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 2000; }
         .search-input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
         .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 2500; }
@@ -76,7 +72,7 @@
         .sugg-desc { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;}
 
         /* ====== KPI BAR ====== */
-        /* UI FIX: Changed to Flexbox with overflow-x auto for small screens */
+        /* BUG FIX: Subordinated z-index to 1 to allow search bar to overlay fully */
         .kpi-row { display: flex; gap: 6px; pointer-events: auto; position: relative; z-index: 1; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
         .kpi-row::-webkit-scrollbar { display: none; }
         .kpi-tile { flex: 1; min-width: 65px; background: var(--bg-glass); backdrop-filter: blur(12px); padding: 8px 2px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 3px solid transparent;}
@@ -86,8 +82,6 @@
 
         /* ====== MAP ====== */
         #map { flex: 1; width: 100%; height: 100%; z-index: 1; background: #e2e8f0; }
-        
-        /* UI FIX: Moved Layer indicator down to avoid Search bar overlap */
         #layer-indicator { position: absolute; top: calc(165px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
         #reticle-coordinates { position: absolute; bottom: calc(105px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); pointer-events: none; z-index: 999; }
 
@@ -141,8 +135,6 @@
         /* ====== MODALS ====== */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 3000; display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.2s; }
         .modal-overlay.open { display: flex; opacity: 1; }
-        
-        /* UI FIX: Added extra padding-bottom so keyboard doesn't hide save button */
         .modal-sheet { width: 100%; max-width: 500px; background: var(--bg-sheet); border-radius: 24px 24px 0 0; padding: 20px 20px 40px 20px; max-height: 90vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s; }
         .modal-overlay.open .modal-sheet { transform: translateY(0); }
         .modal-sheet::before { content: ""; display: block; width: 40px; height: 4px; background: #cbd5e1; border-radius: 10px; margin: 0 auto 16px; }
@@ -152,8 +144,6 @@
 
         .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .sheet-title { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;}
-        
-        /* UI FIX: Increased touch target size for mobile to 44px */
         .sheet-close-btn { background: #f1f5f9; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; color: var(--text-sub); cursor: pointer; transition: transform 0.1s ease; }
         .sheet-close-btn:active { transform: scale(0.92); opacity: 0.8; }
 
@@ -163,7 +153,6 @@
         .form-input:focus, .form-select:focus { border-color: var(--accent); background: #ffffff; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        /* UI FIX: Added click visual feedback */
         .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s ease; }
         .btn-action-primary:active { transform: scale(0.97); opacity: 0.9; }
         
@@ -409,7 +398,7 @@
             line11: "11 KV लाइन", lineLT: "LT लाइन", dt3ph: "3-फेज DT", dt1ph: "1-फेज DT", totalCons: "उपभोक्ता",
             gssMgmt: "जीएसएस प्रबंधन", addNewGss: "नया GSS जोड़ें", manageFdr: "फीडर प्रबंधित करें", 
             export: "एक्सपोर्ट (डिवाइस में सेव करें)", exportPdf: "SLD PDF एक्सपोर्ट", exportDxf: "DXF एक्सपोर्ट", exportKml: "KML एक्सपोर्ट", exportCsv: "CSV एक्सपोर्ट", 
-            import: "इम्पोर्ट", importData: "ऐप डेटा इम्पोर्ट करें", system: "सिस्टम", settings: "सेटिंग्स", about: "ऐप के بارے में",
+            import: "इम्पोर्ट", importData: "ऐप डेटा इम्पोर्ट करें", system: "सिस्टम", settings: "सेटिंग्स", about: "ऐप के बारे में",
             appLanguage: "ऐप की भाषा", distUnit: "दूरी की इकाई", gpsInterval: "जीपीएस रीफ्रेश समय (सेकंड)", gpsAcc: "जीपीएस एक्यूरेसी लिमिट (मीटर)", resetData: "ऐप डेटा रीसेट करें",
             confirmLoc: "मैप सेंटर लोकेशन पक्की करें", confirmHere: "यहाँ सेट करें", cancel: "रद्द करें", setNewLoc: "नई लोकेशन सेट करें",
             toastSettings: "सेटिंग्स सेव हो गईं!", toastDel: "सफलतापूर्वक डिलीट हुआ!", toastImport: "सफलतापूर्वक इम्पोर्ट हुआ!",
@@ -568,6 +557,7 @@
         return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
     }
 
+    /* BUG FIX 2: Strict prefix logic to extract exact coordinates regardless of Map Canvas glitches */
     function getNodeCoords(nodeId) { 
         const net = getActiveNetwork(); 
         const idStr = String(nodeId);
@@ -722,7 +712,8 @@
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false, 
-        preferCanvas: true, 
+        /* BUG FIX 1: Set preferCanvas to FALSE. Canvas renderer breaks vector rotation and mapping layer switches natively. SVG renderer resolves this. */
+        preferCanvas: false, 
         rotate: true, 
         touchRotate: true, 
         shiftKeyRotate: true,
@@ -741,9 +732,11 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 450;
-    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 460;
-    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 470;
+    /* BUG FIX 1: Explicitly assigned Custom Map Pane z-indexes so lines securely sit atop Map Tiles but beneath Pins */
+    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 410;
+    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 420;
+    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 430;
+    
     map.createPane('gssPane'); map.getPane('gssPane').style.zIndex = 500;
     map.createPane('htPolePane'); map.getPane('htPolePane').style.zIndex = 510;
     map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 520;
@@ -1159,13 +1152,14 @@
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
             
+            // BUG FIX 3: Strict String type-casting prevents the dropdowns from failing to match/filter newly added poles
             const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: String(p.poleNo), lat: p.lat, lng: p.lng}));
             
             const feederGss = appState.gssNodes[net.feeder.parentGss];
             if(feederGss) htNodes.push({id: 'GSS_'+feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
             
             let sortedHT = window.sortByDistance(htNodes, snapLat, snapLng);
-            let defaultFrom = sortedHT.length > 0 ? sortedHT[0].id : '';
+            let defaultFrom = sortedHT.length > 0 ? String(sortedHT[0].id) : '';
 
             openModal(`<div class="sheet-head"><div class="sheet-title">Add Line</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Line Type*</label><select id="inpLineType" class="form-select" onchange="window.filterLineNodes()"><option value="11 KV LINE" selected>11 KV Line</option><option value="LT LINE">LT Line</option></select></div>
@@ -1180,7 +1174,7 @@
                 </div>
                 <button class="btn-action-primary" onclick="window.saveNewLine()">Save Line</button>`);
             setTimeout(() => { 
-                let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
+                let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: String(d.code), lat: d.lat, lng: d.lng})), snapLat, snapLng);
                 document.getElementById('inpTargetDT').innerHTML = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id}</option>`).join('');
                 window.filterLineNodes(); 
             }, 30);
@@ -1239,21 +1233,23 @@
         document.getElementById('inpConsParent').innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(centerLat, centerLng, n.lat, n.lng))})</option>`).join('');
     }
 
+    /* BUG FIX 3: Continued Strict string comparison logic down to rendering UI options */
     window.filterLineNodes = function() {
         const type = document.getElementById('inpLineType').value; const net = getActiveNetwork();
         const fromSel = document.getElementById('inpFromNode'); const dtSelectorBox = document.getElementById('ltLineDTSelector');
-        const defaultFrom = String(document.getElementById('inpDefaultFrom').value);
+        let defaultFrom = String(document.getElementById('inpDefaultFrom').value || '');
         const center = map.getCenter();
 
         if (type.includes('LT')) {
-            dtSelectorBox.style.display = 'block'; const selectedDT = document.getElementById('inpTargetDT').value; if(!selectedDT) return;
+            dtSelectorBox.style.display = 'block'; const selectedDT = String(document.getElementById('inpTargetDT').value); if(!selectedDT) return;
             
-            let nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === String(selectedDT)).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: String(p.poleNo)}));
-            const dtObj = net.dts.find(d => String(d.code) === String(selectedDT));
+            let nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === selectedDT).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: String(p.poleNo)}));
+            const dtObj = net.dts.find(d => String(d.code) === selectedDT);
             if(dtObj) nodes.push({id: 'DT_'+selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
             
             nodes = window.sortByDistance(nodes, center.lat, center.lng);
-            fromSel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
+            if (!defaultFrom && nodes.length > 0) defaultFrom = String(nodes[0].id);
+            fromSel.innerHTML = nodes.map(n => `<option value="${n.id}" ${String(n.id) === defaultFrom ? 'selected' : ''}>${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
         } else {
             dtSelectorBox.style.display = 'none';
             let nodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({...p, title: 'HT Pole '+p.poleNo, id: String(p.poleNo)}));
@@ -1261,6 +1257,7 @@
             if (parentGss) nodes.push({id: 'GSS_'+parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
             
             nodes = window.sortByDistance(nodes, center.lat, center.lng);
+            if (!defaultFrom && nodes.length > 0) defaultFrom = String(nodes[0].id);
             let optsHtml = '';
             nodes.forEach(n => { optsHtml += `<option value="${n.id}" ${String(n.id) === defaultFrom ? 'selected' : ''}>${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`; });
             fromSel.innerHTML = optsHtml;
@@ -1300,7 +1297,7 @@
         const no = document.getElementById('inpPoleNo').value.trim(); const category = document.getElementById('inpPoleCategory').value;
         const lat = parseFloat(document.getElementById('inpLat').value), lng = parseFloat(document.getElementById('inpLng').value); 
         if (!no) return alert("Enter pole number"); const net = getActiveNetwork(); 
-        if (net.poles.some(p => p.poleNo == no)) return alert(`Pole exists!`); 
+        if (net.poles.some(p => String(p.poleNo) === no)) return alert(`Pole exists!`); 
         net.poles.push({ id: 'P_'+Date.now(), poleNo: no, lineType: category, lat, lng }); 
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("HT Pole added successfully!");
     }
@@ -1310,9 +1307,9 @@
         const dtCode = document.getElementById('inpLTPoleDT').value; const category = document.getElementById('inpPoleCategory').value;
         const lat = parseFloat(document.getElementById('inpLat').value), lng = parseFloat(document.getElementById('inpLng').value); 
         if (!dtCode) return alert("Select DT"); const net = getActiveNetwork(); 
-        const existingLTPoles = net.poles.filter(p => p.lineType === 'LT' && p.dtCode == dtCode);
+        const existingLTPoles = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === String(dtCode));
         const finalPoleNo = `${dtCode}-${existingLTPoles.length + 1}`;
-        if (net.poles.some(p => p.poleNo == finalPoleNo)) return alert(`Pole ${finalPoleNo} exists!`); 
+        if (net.poles.some(p => String(p.poleNo) === finalPoleNo)) return alert(`Pole ${finalPoleNo} exists!`); 
         net.poles.push({ id: 'P_'+Date.now(), poleNo: finalPoleNo, lineType: category, dtCode: dtCode, lat, lng }); 
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("LT Pole added successfully!");
     }
@@ -1323,7 +1320,7 @@
         if (from === to) return alert("Cannot connect node to itself!"); if (!to) return alert("Please select a target node!");
         const net = getActiveNetwork(), spec = getLineSpec(type); 
         
-        const existingLine = net.lines.find(l => (l.fromNode === from && l.toNode === to) || (l.fromNode === to && l.toNode === from));
+        const existingLine = net.lines.find(l => (String(l.fromNode) === String(from) && String(l.toNode) === String(to)) || (String(l.fromNode) === String(to) && String(l.toNode) === String(from)));
         if(existingLine) return alert("A line already exists between these two nodes!");
 
         const c1 = getNodeCoords(from), c2 = getNodeCoords(to); 
@@ -1339,7 +1336,7 @@
         const location = document.getElementById('inpDTLocation').value.trim();
         if (!code) return alert("Enter DT Code"); const net = getActiveNetwork();
         
-        const p = net.poles.find(x => x.poleNo == parentRef);
+        const p = net.poles.find(x => String(x.poleNo) === String(parentRef));
         let lat = net.feeder.lat, lng = net.feeder.lng; 
         if (p) { lat = p.lat; lng = p.lng; }
 
@@ -1354,9 +1351,9 @@
         const lat = parseFloat(document.getElementById('inpLat').value), lng = parseFloat(document.getElementById('inpLng').value); 
         const net = getActiveNetwork(); 
         
-        if(net.consumers.some(c => c.kno == kno)) return alert("K-Number already exists in this feeder!");
+        if(net.consumers.some(c => String(c.kno) === kno)) return alert("K-Number already exists in this feeder!");
 
-        let parentType = 'POLE'; const p = net.poles.find(x => x.poleNo == parentRef);
+        let parentType = 'POLE'; const p = net.poles.find(x => String(x.poleNo) === String(parentRef));
         if (p) parentType = 'POLE'; else parentType = 'DT';
 
         if (!name || !kno) return alert("Enter Consumer Name and K-No"); 
@@ -1642,8 +1639,3 @@
 </script>
 </body>
 </html>
-
-
-Analyze code and kya smasya h batao line me, gss dt form me, aur kya bug h ui bug ke alawa pure app me kya dikkat hai logic me
-
-Aage ki planning karni h app ke bare me full professional offline first  banne ke liye jiska map offline load ho aur data sync ho sake database server se.
