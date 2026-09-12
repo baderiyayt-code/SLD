@@ -66,7 +66,7 @@
         #layer-indicator { position: absolute; top: calc(75px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
         #reticle-coordinates { position: absolute; bottom: calc(105px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); pointer-events: none; z-index: 999; }
 
-        /* ====== SCREEN CENTER PIN (STATIC & SIMPLE) ====== */
+        /* ====== SCREEN CENTER PIN (STATIC) ====== */
         #center-placement-pin {
             position: absolute;
             top: 50%;
@@ -77,6 +77,17 @@
             display: none; 
             font-size: 48px;
             text-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        /* ====== LIVE MOVE ICON ====== */
+        #live-move-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1500; 
+            pointer-events: none; 
+            display: none; 
         }
 
         /* ====== FLOATING TOOLS ====== */
@@ -115,10 +126,6 @@
         .lt-pole-icon { background: #10b981; color: white; border: 2px solid white; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 22px; height: 22px;}
         
         .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5);}
-
-        /* MOVE TOOLTIP STYLING */
-        .leaflet-tooltip.move-tooltip { background-color: #1e293b; color: #ffffff; border: none; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: 700; font-family: 'Inter', sans-serif; padding: 6px 10px; }
-        .leaflet-tooltip.move-tooltip::before { border-top-color: #1e293b; }
         
         @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
@@ -142,7 +149,7 @@
         .form-input:focus, .form-select:focus { border-color: var(--accent); background: #ffffff; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+        .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-danger-outline { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid #ef4444; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 
         /* ====== SETTINGS & SIDEBAR ====== */
@@ -205,6 +212,9 @@
 
     <!-- NEW SCREEN-CENTER STATIC PIN (📍) -->
     <div id="center-placement-pin">📍</div>
+    
+    <!-- LIVE MOVE ICON -->
+    <div id="live-move-icon"></div>
 
     <div class="right-tools-stack">
         <button class="round-tool-btn" onclick="window.toggleMapLayer()"><i class="fa-solid fa-layer-group" style="color:#0ea5e9;"></i></button>
@@ -236,7 +246,7 @@
         </div>
     </div>
 
-    <!-- LIVE MOVE/RELOCATE CONFIRMATION BAR -->
+    <!-- LIVE MOVE CONFIRMATION BAR -->
     <div id="move-confirm-bar" class="floating-action-bar">
         <div><b id="moveTargetTitle" style="color:var(--accent); font-size:1.0rem;">Target</b></div>
         <div style="display:flex; gap:8px; margin-top:4px;">
@@ -344,7 +354,6 @@
     };
 
     let historyStack = [];
-    let liveMoveMarker = null; // Used for visually moving icons
 
     function getActiveNetwork() {
         if (!appState.feeders[appState.currentFeederCode]) appState.currentFeederCode = Object.keys(appState.feeders)[0] || "FDR-01";
@@ -547,7 +556,6 @@
     map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 460;
     map.createPane('dtPane'); map.getPane('dtPane').style.zIndex = 650; // DT directly over HT Poles
     map.createPane('consumerPane'); map.getPane('consumerPane').style.zIndex = 700;
-    map.createPane('pinPane'); map.getPane('pinPane').style.zIndex = 10000; // Guaranteed Pin Visibility
 
     const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
 
@@ -580,10 +588,10 @@
             const isGssMini = currentZoom < 13;
 
             Object.values(appState.gssNodes).forEach(gss => {
-                // SKIP Rendering the GSS if it is currently being Live Moved
-                if (appState.activeMove && appState.activeMove.type === 'GSS' && appState.activeMove.id === gss.code) return;
-
                 if (typeof gss.lat === 'number') {
+                    // Temporarily hide actual icon if it's the one currently being live-moved
+                    if (appState.activeMove && appState.activeMove.id === gss.code) return; 
+
                     const gssIcon = isGssMini ? L.divIcon({ className: 'gss-mini-dot', iconSize: [16,16], iconAnchor: [8,8] }) : L.divIcon({ className: 'gss-square-icon', html: `<span>GSS</span>`, iconSize: [32,32], iconAnchor: [16,16] });
                     const m = L.marker([gss.lat, gss.lng], { icon: gssIcon, pane: 'gssPane' });
                     m.bindPopup(`<div style="padding:4px;"><b style="color:#b91c1c; font-size:1.1rem;">${gss.name}</b><br><small>Code: ${gss.code}</small><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#fef3c7; border:none; border-radius:6px;" onclick="window.relocateGss('${gss.code}')">Relocate</button></div></div>`);
@@ -617,11 +625,11 @@
 
             if (f.poles) {
                 net.poles.forEach(p => {
-                    // SKIP Rendering if currently being moved
-                    if (appState.activeMove && appState.activeMove.type === 'POLE' && appState.activeMove.id === p.id) return;
-
                     const isOrphan = appState.orphanPoleIds.has(p.id); const isLT = p.lineType === 'LT';
                     if (isLT && !showLTPoles && !isOrphan) return; if (!isLT && !showHTPoles && !isOrphan) return;
+                    
+                    if (appState.activeMove && appState.activeMove.id === p.id) return; // Hide actual icon if live-moving
+
                     const iconClass = isLT ? 'lt-pole-icon' : 'pole-marker-icon'; const pane = isLT ? 'ltPolePane' : 'htPolePane';
                     let displayNo = p.poleNo; if (isLT && String(p.poleNo).includes('-')) displayNo = String(p.poleNo).split('-')[1];
 
@@ -645,9 +653,6 @@
 
             if (showConsumers) {
                 net.consumers.forEach(c => {
-                    // SKIP Rendering if currently being moved
-                    if (appState.activeMove && appState.activeMove.type === 'CONSUMER' && appState.activeMove.id === c.id) return;
-
                     let parentCoord = null;
                     if (c.parentType === 'POLE') { const p = net.poles.find(x => x.poleNo == c.parentRef); if (p) parentCoord = { lat: p.lat, lng: p.lng }; } 
                     else if (c.parentType === 'DT') { const d = net.dts.find(x => x.code == c.parentRef); if (d) parentCoord = { lat: d.lat, lng: d.lng }; }
@@ -660,6 +665,8 @@
                         L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#000000', weight: 1.5, dashArray: '2,4', opacity: 0.7, pane: 'bgLinesPane' }).addTo(featureGroups.consumerLines); 
                     }
                     
+                    if (appState.activeMove && appState.activeMove.id === c.id) return; // Hide actual icon if live-moving
+
                     const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: 'consumer-marker-icon', html: `<i class="fa-solid fa-house"></i>`, iconSize: [18,18], iconAnchor: [9,9] }), pane: 'consumerPane' });
                     m.bindPopup(`<div style="padding:4px;"><b>${c.name}</b><p style="color:#64748b; margin:4px 0;">K-No: ${c.kno} | Connected to: ${c.parentRef}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:6px; background:#eff6ff; border:none; border-radius:6px;" onclick="window.openEditModal('consumer','${c.id}')">Edit</button><button style="flex:1; padding:6px; background:#fef3c7; border:none; border-radius:6px;" onclick="window.startObjectMove('CONSUMER','${c.id}','${c.name}')">Move</button><button style="flex:1; padding:6px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="window.deleteEntity('consumer','${c.id}')">Delete</button></div></div>`);
                     featureGroups.consumers.addLayer(m);
@@ -700,7 +707,7 @@
         const code = document.getElementById('inpGssCode').value.trim(); const name = document.getElementById('inpGssName').value.trim();
         if(!code || !name) return alert("Fill required fields"); const center = map.getCenter();
         appState.gssNodes[code] = { code, name, lat: parseFloat(center.lat.toFixed(6)), lng: parseFloat(center.lng.toFixed(6)) };
-        window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("GSS Added");
+        closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("GSS Added");
     }
 
     window.relocateGss = function(code) {
@@ -709,7 +716,6 @@
         window.startObjectMove('GSS', code, 'GSS: ' + code);
     }
 
-    /* ====== STRICT GSS DELETION LOGIC ====== */
     window.promptDeleteGss = function(code) {
         if(Object.keys(appState.gssNodes).length <= 1) return alert("Cannot delete the only GSS.");
         openModal(`<div class="sheet-head"><div class="sheet-title" style="color:#ef4444;"><i class="fa-solid fa-trash"></i> Delete GSS</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
@@ -728,7 +734,6 @@
     /* ====== DYNAMIC PIN PLACEMENT (STATIC NO-ANIMATION PIN) ====== */
     window.openAddForm = function(type) {
         window.toggleSpeedDial(false); 
-        
         if (type === 'POLE' || type === 'LTPOLE' || type === 'CONSUMER') { 
             appState.placementType = type;
             document.getElementById('center-placement-pin').style.display = 'block';
@@ -743,12 +748,8 @@
         document.getElementById('center-placement-pin').style.display = 'none';
         document.getElementById('placement-confirm-bar').style.display = 'none';
         document.getElementById('bottom-single-action').style.display = 'block';
-        
         const center = map.getCenter();
-        const lat = parseFloat(center.lat.toFixed(6)); 
-        const lng = parseFloat(center.lng.toFixed(6));
-        
-        window.showFormModal(appState.placementType, lat, lng);
+        window.showFormModal(appState.placementType, parseFloat(center.lat.toFixed(6)), parseFloat(center.lng.toFixed(6)));
     }
 
     window.cancelPlacement = function() {
@@ -808,60 +809,43 @@
     window.saveEditedDT = function(id) { saveSnapshot(); const net = getActiveNetwork(); const d = net.dts.find(x => x.id === id); if (!d) return; d.code = document.getElementById('editDTCode').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
     window.saveEditedConsumer = function(id) { saveSnapshot(); const net = getActiveNetwork(); const c = net.consumers.find(x => x.id === id); if (!c) return; c.name = document.getElementById('editConsName').value.trim(); c.kno = document.getElementById('editConsKno').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
 
-    /* ====== LIVE DRAGGABLE ICON MOVE LOGIC ====== */
+    /* ====== LIVE MOVE FUNCTIONALITY ====== */
     window.startObjectMove = function(type, id, title) {
-        map.closePopup(); 
-        appState.activeMove = { type, id };
+        map.closePopup(); appState.activeMove = { type, id };
         document.getElementById('bottom-single-action').style.display = 'none'; 
         document.getElementById('move-confirm-bar').style.display = 'flex';
         document.getElementById('moveTargetTitle').innerText = `Move: ${title}`;
         
-        let target = null;
-        let iconHtml = ''; let iconClass = ''; let iconSize = [24,24]; let iconAnchor = [12,12];
-
+        let target = null; let htmlContent = '';
         if(type === 'GSS') {
             target = appState.gssNodes[id];
-            iconClass = 'gss-square-icon'; iconHtml = '<span>GSS</span>'; iconSize = [32,32]; iconAnchor = [16,16];
+            htmlContent = `<div class="gss-square-icon" style="box-shadow: 0 10px 25px rgba(0,0,0,0.5);"><span>GSS</span></div>`;
         } else {
             const net = getActiveNetwork(); 
             if (type === 'POLE') {
                 target = net.poles.find(x => x.id === id); 
-                if(target) {
-                    if(target.lineType === 'LT') {
-                        iconClass = 'lt-pole-icon';
-                        let displayNo = target.poleNo; if(String(displayNo).includes('-')) displayNo = String(displayNo).split('-')[1];
-                        iconHtml = `<span>${displayNo}</span>`; iconSize = [22,22]; iconAnchor = [11,11];
-                    } else {
-                        iconClass = 'pole-marker-icon'; iconHtml = `<span>${target.poleNo}</span>`; iconSize = [26,26]; iconAnchor = [13,13];
-                    }
-                }
-            } else if (type === 'CONSUMER') {
+                const isLT = target.lineType === 'LT';
+                let displayNo = target.poleNo; if (isLT && String(target.poleNo).includes('-')) displayNo = String(target.poleNo).split('-')[1];
+                htmlContent = `<div class="${isLT ? 'lt-pole-icon' : 'pole-marker-icon'}" style="box-shadow: 0 10px 25px rgba(0,0,0,0.5);"><span>${displayNo}</span></div>`;
+            } 
+            else if (type === 'CONSUMER') {
                 target = net.consumers.find(x => x.id === id);
-                iconClass = 'consumer-marker-icon'; iconHtml = '<i class="fa-solid fa-house"></i>'; iconSize = [18,18]; iconAnchor = [9,9];
+                htmlContent = `<div class="consumer-marker-icon" style="box-shadow: 0 10px 25px rgba(0,0,0,0.5);"><i class="fa-solid fa-house"></i></div>`;
             }
         }
         
         if (target && target.lat) {
             map.panTo([target.lat, target.lng]);
-            renderEntireNetwork(); // Hides original marker
-
-            // Create Draggable Live Marker
-            liveMoveMarker = L.marker([target.lat, target.lng], {
-                draggable: true,
-                pane: 'pinPane',
-                icon: L.divIcon({ className: iconClass, html: iconHtml, iconSize: iconSize, iconAnchor: iconAnchor })
-            }).addTo(map);
-            
-            liveMoveMarker.bindTooltip("Drag me to new location", {permanent: true, direction: "top", offset: [0, -15], className: "move-tooltip"}).openTooltip();
+            const liveIconContainer = document.getElementById('live-move-icon');
+            liveIconContainer.innerHTML = htmlContent;
+            liveIconContainer.style.display = 'block';
+            renderEntireNetwork(); // Re-render to hide original icon
         }
     }
     
     window.confirmObjectMove = function() {
-        if (!appState.activeMove || !liveMoveMarker) return; saveSnapshot();
-        
-        const pos = liveMoveMarker.getLatLng();
-        const lat = parseFloat(pos.lat.toFixed(6)); 
-        const lng = parseFloat(pos.lng.toFixed(6));
+        if (!appState.activeMove) return; saveSnapshot();
+        const c = map.getCenter(); const lat = parseFloat(c.lat.toFixed(6)), lng = parseFloat(c.lng.toFixed(6));
         const net = getActiveNetwork(); 
         
         if (appState.activeMove.type === 'GSS') {
@@ -888,11 +872,11 @@
     }
     
     window.cancelObjectMove = function() { 
-        if(liveMoveMarker) { map.removeLayer(liveMoveMarker); liveMoveMarker = null; }
         appState.activeMove = null; 
+        document.getElementById('live-move-icon').style.display = 'none';
         document.getElementById('move-confirm-bar').style.display = 'none'; 
         document.getElementById('bottom-single-action').style.display = 'block'; 
-        renderEntireNetwork(); 
+        renderEntireNetwork(); // Restore original icon visibility
     }
 
     window.openAddNewFeederModal = function() {
@@ -925,7 +909,7 @@
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Configuration Saved!");
     }
 
-    /* ====== SMART PARENTING ADD FORMS ====== */
+    /* ====== ADD FORMS ====== */
     window.showFormModal = function(type, snapLat, snapLng) {
         const net = getActiveNetwork(); 
         const center = map.getCenter();
@@ -941,7 +925,6 @@
                 <button class="btn-action-primary" onclick="window.saveNewPole()">Save HT Pole</button>`);
         } else if (type === 'LTPOLE') {
             if (net.dts.length === 0) return alert("You must add a DT first before adding an LT Pole!");
-            
             let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
             const dtOpts = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id} (${window.formatDistance(window.calcDistance(snapLat, snapLng, d.lat, d.lng))})</option>`).join('');
 
@@ -952,19 +935,27 @@
                 <button class="btn-action-primary" onclick="window.saveNewLTPole()">Save LT Pole</button>`);
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
+            const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: p.poleNo, lat: p.lat, lng: p.lng}));
+            const feederGss = appState.gssNodes[net.feeder.parentGss];
+            if(feederGss) htNodes.push({id: feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
+            
+            let sortedHT = window.sortByDistance(htNodes, snapLat, snapLng);
+            let defaultFrom = sortedHT.length > 0 ? sortedHT[0].id : '';
+
             openModal(`<div class="sheet-head"><div class="sheet-title">Add Line</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Line Type*</label><select id="inpLineType" class="form-select" onchange="window.filterLineNodes()"><option value="11 KV LINE" selected>11 KV Line</option><option value="LT LINE">LT Line</option></select></div>
                 <div id="ltLineDTSelector" style="display:none; background:#f1f5f9; padding:8px; border-radius:8px; margin-bottom:12px;">
                     <label style="font-size:0.75rem; font-weight:700;">Select DT for LT Line Routing*</label>
                     <select id="inpTargetDT" class="form-select" onchange="window.filterLineNodes()"></select>
                 </div>
+                <input type="hidden" id="inpDefaultFrom" value="${defaultFrom}">
                 <div class="form-grid-2">
                     <div class="form-row"><label>From Node*</label><select id="inpFromNode" class="form-select" onchange="window.syncLineToSelect()"></select></div>
                     <div class="form-row"><label>To Node*</label><select id="inpToNode" class="form-select"></select></div>
                 </div>
                 <button class="btn-action-primary" onclick="window.saveNewLine()">Save Line</button>`);
             setTimeout(() => { 
-                let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), center.lat, center.lng);
+                let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
                 document.getElementById('inpTargetDT').innerHTML = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id}</option>`).join('');
                 window.filterLineNodes(); 
             }, 30);
@@ -1025,6 +1016,7 @@
     window.filterLineNodes = function() {
         const type = document.getElementById('inpLineType').value; const net = getActiveNetwork();
         const fromSel = document.getElementById('inpFromNode'); const dtSelectorBox = document.getElementById('ltLineDTSelector');
+        const defaultFrom = document.getElementById('inpDefaultFrom').value;
         const center = map.getCenter();
 
         if (type.includes('LT')) {
@@ -1043,7 +1035,11 @@
             if (parentGss) nodes.push({id: parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
             
             nodes = window.sortByDistance(nodes, center.lat, center.lng);
-            fromSel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
+            
+            // Re-apply defaultFrom if it exists in the sorted list to keep it pre-selected
+            let optsHtml = '';
+            nodes.forEach(n => { optsHtml += `<option value="${n.id}" ${n.id == defaultFrom ? 'selected' : ''}>${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`; });
+            fromSel.innerHTML = optsHtml;
         }
         window.syncLineToSelect();
     }
@@ -1139,34 +1135,31 @@
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Consumer added successfully!");
     }
 
-    /* ====== SECURE RESET APP DATA ====== */
+    /* ====== SECURE APP RESET MODAL LOGIC ====== */
     window.openResetConfirmationModal = function() {
-        openModal(`<div class="sheet-head"><div class="sheet-title" style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Reset App Data</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
-            <div style="background:#fee2e2; color:#b91c1c; padding:12px; border-radius:8px; font-size:0.85rem; margin-bottom:12px; font-weight:600;">
-                <i class="fa-solid fa-warning"></i> Warning: This action will permanently erase all surveys, lines, poles, and offline settings.
-            </div>
-            <div class="form-row"><label>Type <b>RESET</b> to confirm</label>
-            <input type="text" id="inpResetText" class="form-input" placeholder="Type RESET here" oninput="window.checkResetInput()"></div>
-            <button id="btnConfirmReset" class="btn-action-primary" style="background:#fca5a5; cursor:not-allowed;" disabled onclick="window.executeAppReset()">Permanently Delete All Data</button>`);
+        window.closeSettingsPage(); 
+        window.toggleSidebar(false); 
+        
+        openModal(`<div class="sheet-head"><div class="sheet-title" style="color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i> Secure App Reset</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+            <p style="margin-bottom:12px; font-size:0.9rem; color:var(--text-sub);">This action will permanently wipe all survey data, feeders, and settings from your device. This cannot be undone.</p>
+            <div class="form-row"><label>Type <b>RESET</b> to confirm</label><input type="text" id="inpAppResetText" class="form-input" placeholder="Type RESET here"></div>
+            <button class="btn-action-primary" style="background:#dc2626;" onclick="window.executeSecureAppReset()">Permanently Delete All Data</button>`);
     }
 
-    window.checkResetInput = function() {
-        const val = document.getElementById('inpResetText').value.trim();
-        const btn = document.getElementById('btnConfirmReset');
-        if(val === 'RESET') {
-            btn.style.background = '#dc2626';
-            btn.style.cursor = 'pointer';
-            btn.disabled = false;
-        } else {
-            btn.style.background = '#fca5a5';
-            btn.style.cursor = 'not-allowed';
-            btn.disabled = true;
+    window.executeSecureAppReset = function() { 
+        const inputVal = document.getElementById('inpAppResetText').value.trim();
+        if (inputVal !== "RESET") {
+            alert("Confirmation failed. You must type 'RESET' exactly.");
+            return;
         }
-    }
-
-    window.executeAppReset = function() { 
-        if (document.getElementById('inpResetText').value.trim() !== "RESET") return; 
-        localforage.clear(); localStorage.clear(); location.reload();
+        
+        localforage.clear().then(() => {
+            localStorage.clear(); 
+            location.reload();
+        }).catch(err => {
+            localStorage.clear(); 
+            location.reload();
+        });
     }
 
     let liveTrackingId = null; let liveLocMarker = null;
