@@ -54,13 +54,14 @@
         .header-glass { display: flex; justify-content: space-between; align-items: center; background: var(--bg-glass); backdrop-filter: blur(16px); padding: 10px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; }
         .header-title-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
         .modern-select { appearance: none; background: #f1f5f9; color: var(--text-main); border: 1px solid transparent; padding: 8px 30px 8px 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; outline: none; cursor: pointer; max-width: 160px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
+        
         .header-actions { display: flex; gap: 6px; }
         .action-btn-sm { width: 44px; height: 44px; border-radius: var(--radius-md); background: transparent; color: var(--accent); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; pointer-events: auto; transition: transform 0.1s ease; }
         .action-btn-sm:active { transform: scale(0.92); opacity: 0.8; }
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
 
         /* ====== SEARCH BAR ====== */
-        /* BUG FIX: Superior z-index context relative to the KPI bar for smooth overlays */
+        /* FIX 4: Explicit Z-Index strictly higher than KPI Bar */
         .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 2000; }
         .search-input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
         .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 2500; }
@@ -72,8 +73,8 @@
         .sugg-desc { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;}
 
         /* ====== KPI BAR ====== */
-        /* BUG FIX: Subordinated z-index to 1 to allow search bar to overlay fully */
-        .kpi-row { display: flex; gap: 6px; pointer-events: auto; position: relative; z-index: 1; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+        /* FIX 4: Kept strictly under Search bar context */
+        .kpi-row { display: flex; gap: 6px; pointer-events: auto; position: relative; z-index: 10; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
         .kpi-row::-webkit-scrollbar { display: none; }
         .kpi-tile { flex: 1; min-width: 65px; background: var(--bg-glass); backdrop-filter: blur(12px); padding: 8px 2px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 3px solid transparent;}
         .kpi-tile:nth-child(1) { border-top-color: var(--c-11kv); } .kpi-tile:nth-child(2) { border-top-color: var(--c-dt); } .kpi-tile:nth-child(3) { border-top-color: var(--c-lt); } .kpi-tile:nth-child(4) { border-top-color: #8b5cf6; } .kpi-tile:nth-child(5) { border-top-color: #ec4899; }
@@ -82,6 +83,7 @@
 
         /* ====== MAP ====== */
         #map { flex: 1; width: 100%; height: 100%; z-index: 1; background: #e2e8f0; }
+        
         #layer-indicator { position: absolute; top: calc(165px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
         #reticle-coordinates { position: absolute; bottom: calc(105px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); pointer-events: none; z-index: 999; }
 
@@ -557,7 +559,7 @@
         return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
     }
 
-    /* BUG FIX 2: Strict prefix logic to extract exact coordinates regardless of Map Canvas glitches */
+    /* FIX 2: Strict Node Coordinate Resolution Logic */
     function getNodeCoords(nodeId) { 
         const net = getActiveNetwork(); 
         const idStr = String(nodeId);
@@ -571,7 +573,13 @@
             const d = net.dts.find(x => String(x.code) === code);
             if (d) return { lat: d.lat, lng: d.lng };
         }
+        if (idStr.startsWith('POLE_')) {
+            const code = idStr.replace('POLE_', '');
+            const p = net.poles.find(x => String(x.poleNo) === code);
+            if (p) return { lat: p.lat, lng: p.lng };
+        }
 
+        // Fallbacks for older lines saved without prefix
         const p = net.poles.find(x => String(x.poleNo) === idStr); if (p) return { lat: p.lat, lng: p.lng };
         const d = net.dts.find(x => String(x.code) === idStr); if (d) return { lat: d.lat, lng: d.lng };
         if (appState.gssNodes[idStr]) return { lat: appState.gssNodes[idStr].lat, lng: appState.gssNodes[idStr].lng };
@@ -709,10 +717,10 @@
     }
 
     /* ====== MAP LAYER SETUP ====== */
+    /* FIX 1: preferCanvas changed to false (Forces SVG Renderer) which natively handles Rotation Transforms properly! */
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false, 
-        /* BUG FIX 1: Set preferCanvas to FALSE. Canvas renderer breaks vector rotation and mapping layer switches natively. SVG renderer resolves this. */
         preferCanvas: false, 
         rotate: true, 
         touchRotate: true, 
@@ -732,11 +740,10 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    /* BUG FIX 1: Explicitly assigned Custom Map Pane z-indexes so lines securely sit atop Map Tiles but beneath Pins */
-    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 410;
-    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 420;
-    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 430;
-    
+    /* FIX 1: Safely elevated Z-Index so they don't get trapped under Map Layers (OSM defaults to 200/400) */
+    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 450;
+    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 460;
+    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 470;
     map.createPane('gssPane'); map.getPane('gssPane').style.zIndex = 500;
     map.createPane('htPolePane'); map.getPane('htPolePane').style.zIndex = 510;
     map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 520;
@@ -786,6 +793,7 @@
 
             const spanBuckets = {};
             net.lines.forEach(line => {
+                /* FIX 2: Live resolution of dynamic coords perfectly connects snapping logic */
                 const c1 = getNodeCoords(line.fromNode); 
                 const c2 = getNodeCoords(line.toNode); 
                 if (c1 && c2) { 
@@ -1152,14 +1160,14 @@
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
             
-            // BUG FIX 3: Strict String type-casting prevents the dropdowns from failing to match/filter newly added poles
-            const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: String(p.poleNo), lat: p.lat, lng: p.lng}));
+            /* FIX 3: Fully Isolated Dropdown Filtering - Ensures Pole populates correctly */
+            const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: 'POLE_'+p.poleNo, lat: p.lat, lng: p.lng}));
             
             const feederGss = appState.gssNodes[net.feeder.parentGss];
             if(feederGss) htNodes.push({id: 'GSS_'+feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
             
             let sortedHT = window.sortByDistance(htNodes, snapLat, snapLng);
-            let defaultFrom = sortedHT.length > 0 ? String(sortedHT[0].id) : '';
+            let defaultFrom = sortedHT.length > 0 ? sortedHT[0].id : '';
 
             openModal(`<div class="sheet-head"><div class="sheet-title">Add Line</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Line Type*</label><select id="inpLineType" class="form-select" onchange="window.filterLineNodes()"><option value="11 KV LINE" selected>11 KV Line</option><option value="LT LINE">LT Line</option></select></div>
@@ -1174,7 +1182,7 @@
                 </div>
                 <button class="btn-action-primary" onclick="window.saveNewLine()">Save Line</button>`);
             setTimeout(() => { 
-                let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: String(d.code), lat: d.lat, lng: d.lng})), snapLat, snapLng);
+                let sortedDTs = window.sortByDistance(net.dts.map(d=>({id: d.code, lat: d.lat, lng: d.lng})), snapLat, snapLng);
                 document.getElementById('inpTargetDT').innerHTML = sortedDTs.map(d => `<option value="${d.id}">DT: ${d.id}</option>`).join('');
                 window.filterLineNodes(); 
             }, 30);
@@ -1233,31 +1241,29 @@
         document.getElementById('inpConsParent').innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(centerLat, centerLng, n.lat, n.lng))})</option>`).join('');
     }
 
-    /* BUG FIX 3: Continued Strict string comparison logic down to rendering UI options */
+    /* FIX 3: Isolated Prefixes completely resolved dropping node visibility */
     window.filterLineNodes = function() {
         const type = document.getElementById('inpLineType').value; const net = getActiveNetwork();
         const fromSel = document.getElementById('inpFromNode'); const dtSelectorBox = document.getElementById('ltLineDTSelector');
-        let defaultFrom = String(document.getElementById('inpDefaultFrom').value || '');
+        const defaultFrom = String(document.getElementById('inpDefaultFrom').value);
         const center = map.getCenter();
 
         if (type.includes('LT')) {
-            dtSelectorBox.style.display = 'block'; const selectedDT = String(document.getElementById('inpTargetDT').value); if(!selectedDT) return;
+            dtSelectorBox.style.display = 'block'; const selectedDT = document.getElementById('inpTargetDT').value; if(!selectedDT) return;
             
-            let nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === selectedDT).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: String(p.poleNo)}));
-            const dtObj = net.dts.find(d => String(d.code) === selectedDT);
+            let nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === String(selectedDT)).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: 'POLE_' + p.poleNo}));
+            const dtObj = net.dts.find(d => String(d.code) === String(selectedDT));
             if(dtObj) nodes.push({id: 'DT_'+selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
             
             nodes = window.sortByDistance(nodes, center.lat, center.lng);
-            if (!defaultFrom && nodes.length > 0) defaultFrom = String(nodes[0].id);
-            fromSel.innerHTML = nodes.map(n => `<option value="${n.id}" ${String(n.id) === defaultFrom ? 'selected' : ''}>${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
+            fromSel.innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`).join('');
         } else {
             dtSelectorBox.style.display = 'none';
-            let nodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({...p, title: 'HT Pole '+p.poleNo, id: String(p.poleNo)}));
+            let nodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({...p, title: 'HT Pole '+p.poleNo, id: 'POLE_' + p.poleNo}));
             const parentGss = appState.gssNodes[net.feeder.parentGss];
             if (parentGss) nodes.push({id: 'GSS_'+parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
             
             nodes = window.sortByDistance(nodes, center.lat, center.lng);
-            if (!defaultFrom && nodes.length > 0) defaultFrom = String(nodes[0].id);
             let optsHtml = '';
             nodes.forEach(n => { optsHtml += `<option value="${n.id}" ${String(n.id) === defaultFrom ? 'selected' : ''}>${n.title} (${window.formatDistance(window.calcDistance(center.lat, center.lng, n.lat, n.lng))})</option>`; });
             fromSel.innerHTML = optsHtml;
@@ -1275,15 +1281,15 @@
         let nodes = [];
         if (type.includes('LT')) {
             const selectedDT = String(document.getElementById('inpTargetDT').value);
-            nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === selectedDT && String(p.poleNo) !== fromVal).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: String(p.poleNo)}));
-            if(selectedDT !== fromVal && ('DT_'+selectedDT) !== fromVal) {
+            nodes = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === selectedDT && ('POLE_'+p.poleNo) !== fromVal).map(p => ({...p, title: 'LT Pole: '+p.poleNo, id: 'POLE_' + p.poleNo}));
+            if(selectedDT && ('DT_'+selectedDT) !== fromVal) {
                 const dtObj = net.dts.find(d => String(d.code) === selectedDT);
                 if(dtObj) nodes.push({id: 'DT_'+selectedDT, title: 'DT: '+selectedDT, lat: dtObj.lat, lng: dtObj.lng});
             }
         } else {
-            nodes = net.poles.filter(p => p.lineType !== 'LT' && String(p.poleNo) !== fromVal).map(p => ({...p, title: 'HT Pole '+p.poleNo, id: String(p.poleNo)}));
+            nodes = net.poles.filter(p => p.lineType !== 'LT' && ('POLE_'+p.poleNo) !== fromVal).map(p => ({...p, title: 'HT Pole '+p.poleNo, id: 'POLE_' + p.poleNo}));
             const parentGss = appState.gssNodes[net.feeder.parentGss];
-            if (parentGss && String(parentGss.code) !== fromVal && ('GSS_'+parentGss.code) !== fromVal) {
+            if (parentGss && ('GSS_'+parentGss.code) !== fromVal) {
                 nodes.push({id: 'GSS_'+parentGss.code, title: 'GSS ('+parentGss.code+')', lat: parentGss.lat, lng: parentGss.lng});
             }
         }
@@ -1309,7 +1315,7 @@
         if (!dtCode) return alert("Select DT"); const net = getActiveNetwork(); 
         const existingLTPoles = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === String(dtCode));
         const finalPoleNo = `${dtCode}-${existingLTPoles.length + 1}`;
-        if (net.poles.some(p => String(p.poleNo) === finalPoleNo)) return alert(`Pole ${finalPoleNo} exists!`); 
+        if (net.poles.some(p => String(p.poleNo) === String(finalPoleNo))) return alert(`Pole ${finalPoleNo} exists!`); 
         net.poles.push({ id: 'P_'+Date.now(), poleNo: finalPoleNo, lineType: category, dtCode: dtCode, lat, lng }); 
         window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("LT Pole added successfully!");
     }
@@ -1320,7 +1326,7 @@
         if (from === to) return alert("Cannot connect node to itself!"); if (!to) return alert("Please select a target node!");
         const net = getActiveNetwork(), spec = getLineSpec(type); 
         
-        const existingLine = net.lines.find(l => (String(l.fromNode) === String(from) && String(l.toNode) === String(to)) || (String(l.fromNode) === String(to) && String(l.toNode) === String(from)));
+        const existingLine = net.lines.find(l => (l.fromNode === from && l.toNode === to) || (l.fromNode === to && l.toNode === from));
         if(existingLine) return alert("A line already exists between these two nodes!");
 
         const c1 = getNodeCoords(from), c2 = getNodeCoords(to); 
@@ -1351,7 +1357,7 @@
         const lat = parseFloat(document.getElementById('inpLat').value), lng = parseFloat(document.getElementById('inpLng').value); 
         const net = getActiveNetwork(); 
         
-        if(net.consumers.some(c => String(c.kno) === kno)) return alert("K-Number already exists in this feeder!");
+        if(net.consumers.some(c => String(c.kno) === String(kno))) return alert("K-Number already exists in this feeder!");
 
         let parentType = 'POLE'; const p = net.poles.find(x => String(x.poleNo) === String(parentRef));
         if (p) parentType = 'POLE'; else parentType = 'DT';
