@@ -16,6 +16,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <!-- Leaflet MarkerCluster Plugin for Performance -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
     <!-- Stable Map Rotation Plugin -->
     <script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
     
@@ -38,10 +43,12 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-main); }
-        #app-container { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        
+        /* HIDDEN INITIALLY UNTIL AUTH VERIFIED */
+        #app-container { position: relative; width: 100%; height: 100%; display: none; flex-direction: column; }
 
         /* ====== SPLASH SCREEN ====== */
-        #splash-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #2563eb); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: opacity 0.6s ease, transform 0.6s ease; }
+        #splash-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #2563eb); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: opacity 0.6s ease, transform 0.6s ease; }
         #splash-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
         .splash-logo { width: 100px; height: 100px; background: white; color: #2563eb; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: pulse 2s infinite; }
         .splash-title { font-size: 2.2rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 6px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
@@ -50,6 +57,19 @@
         @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(255,255,255,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        /* ====== FULL SCREEN AUTH SCREEN (GLASSMORPHISM) ====== */
+        #auth-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #2563eb); z-index: 50000; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 24px; padding: 40px 24px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); }
+        .auth-card .auth-logo { font-size: 3rem; color: white; margin-bottom: 10px; }
+        .auth-card h2 { color: white; margin-bottom: 24px; font-weight: 800; letter-spacing: 1px; }
+        .auth-input-glass { width: 100%; padding: 16px; margin-bottom: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.15); color: white; outline: none; font-size: 1rem; font-weight: 600; transition: all 0.3s; }
+        .auth-input-glass::placeholder { color: rgba(255,255,255,0.7); }
+        .auth-input-glass:focus { border-color: white; background: rgba(0,0,0,0.25); box-shadow: 0 0 15px rgba(255,255,255,0.1); }
+        .auth-card .btn-action-primary { margin-top: 10px; font-size: 1.1rem; padding: 16px; border-radius: 12px; background: white; color: #1e3a8a; box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .auth-card .btn-signup { background: #10b981; color: white; }
+        .auth-toggle-link { font-size: 0.85rem; color: #e0f2fe; margin-top: 20px; cursor: pointer; font-weight: 600; transition: color 0.3s; display: inline-block;}
+        .auth-toggle-link:hover { color: white; text-decoration: underline; }
+
         /* ====== TOP HEADER & DASHBOARD ====== */
         #top-bar { position: absolute; top: env(safe-area-inset-top, 10px); left: 12px; right: 12px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
         
@@ -57,10 +77,13 @@
         .header-title-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
         .modern-select { appearance: none; background: #f1f5f9; color: var(--text-main); border: 1px solid transparent; padding: 8px 30px 8px 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; outline: none; cursor: pointer; max-width: 160px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
         
-        .header-actions { display: flex; gap: 6px; }
+        .header-actions { display: flex; align-items: center; gap: 6px; }
         .action-btn-sm { width: 44px; height: 44px; border-radius: var(--radius-md); background: transparent; color: var(--accent); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; pointer-events: auto; transition: transform 0.1s ease; }
         .action-btn-sm:active { transform: scale(0.92); opacity: 0.8; }
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
+
+        /* Sync Indicator */
+        #sync-indicator { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: rgba(255,255,255,0.7); border-radius: var(--radius-md); font-size: 0.9rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto;}
 
         /* ====== SEARCH BAR ====== */
         .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 2000; }
@@ -169,13 +192,9 @@
         #sidebar-drawer.open { transform: translateX(0); }
         .sidebar-header-gradient { padding: 24px 16px 16px; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; }
         
-        /* Auth UI specific */
-        .auth-input-glass { width: 100%; padding: 10px 12px; margin-bottom: 10px; border-radius: var(--radius-md); border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.15); color: white; outline: none; font-size: 0.9rem; font-weight: 600; }
-        .auth-input-glass::placeholder { color: rgba(255,255,255,0.6); }
-        .auth-input-glass:focus { border-color: white; background: rgba(0,0,0,0.25); }
-        .user-profile-img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; object-fit: cover; margin-bottom: 10px; display: none; background: white; align-items: center; justify-content: center; font-size: 24px; color: #2563eb; }
+        .user-profile-img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; object-fit: cover; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #2563eb; background: white;}
         
-        .sidebar-menu-list { flex: 1; overflow-y: auto; padding: 16px; }
+        .sidebar-menu-list { flex: 1; overflow-y: auto; padding: 16px; display:flex; flex-direction:column;}
         .menu-category-title { font-size: 0.7rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin: 16px 0 8px 4px; }
         .menu-link-btn { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-main);}
         .menu-link-btn:active { background: #f1f5f9; }
@@ -184,6 +203,27 @@
 </head>
 <body>
 
+<!-- AUTH SCREEN: SHOWN IF NOT LOGGED IN -->
+<div id="auth-screen">
+    <div class="auth-card">
+        <div class="auth-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
+        <h2>DISCOM Pro</h2>
+        <div id="authForms">
+            <div id="signupNameField" style="display:none;">
+                <input type="text" id="authName" class="auth-input-glass" placeholder="Full Name">
+            </div>
+            <input type="email" id="authEmail" class="auth-input-glass" placeholder="Email Address">
+            <input type="password" id="authPassword" class="auth-input-glass" placeholder="Password">
+            
+            <button class="btn-action-primary" id="loginBtn" onclick="handleSupabaseAuth('login')">Login to Account</button>
+            <button class="btn-action-primary btn-signup" id="signupBtn" onclick="handleSupabaseAuth('signup')" style="display:none;">Create Account</button>
+            
+            <span class="auth-toggle-link" onclick="toggleAuthMode()" id="authToggleText">Need an account? Sign Up</span>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN APP: HIDDEN UNTIL LOGGED IN -->
 <div id="app-container">
     
     <!-- SPLASH SCREEN -->
@@ -207,6 +247,7 @@
                 <button class="action-btn-sm" onclick="window.openAddNewFeederModal()"><i class="fa-solid fa-plus"></i></button>
             </div>
             <div class="header-actions">
+                <div id="sync-indicator" title="Sync Status">✅☁️</div>
                 <button class="action-btn-sm bg" onclick="window.runOrphanNodeChecker()"><i class="fa-solid fa-network-wired" style="color:#d97706;"></i></button>
             </div>
         </div>
@@ -323,29 +364,8 @@
 <div id="sidebar-drawer">
     <div class="sidebar-header-gradient">
         <div id="sidebarProfileImg" class="user-profile-img"><i class="fa-solid fa-user"></i></div>
-        <h3 id="userNameDisplay" style="font-size:1rem; font-weight:700; display:none; margin-top:5px;">User Name</h3>
-        <p id="userEmailDisplay" style="font-size:0.75rem; opacity:0.9; margin-top:2px; display:none;">user@example.com</p>
-        
-        <!-- NEW SUPABASE AUTH UI (Glassmorphism) -->
-        <div id="supabaseAuthBox" style="margin-top: 10px; background: rgba(255,255,255,0.15); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); box-shadow: var(--shadow-sm);">
-            
-            <div id="authForms">
-                <div id="signupNameField" style="display:none;">
-                    <input type="text" id="authName" class="auth-input-glass" placeholder="Full Name">
-                </div>
-                <input type="email" id="authEmail" class="auth-input-glass" placeholder="Email Address">
-                <input type="password" id="authPassword" class="auth-input-glass" placeholder="Password">
-                
-                <button class="btn-action-primary" id="loginBtn" onclick="handleSupabaseAuth('login')" style="padding: 10px; font-size: 0.9rem; background: #ffffff; color: #1e3a8a; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Login</button>
-                <button class="btn-action-primary" id="signupBtn" onclick="handleSupabaseAuth('signup')" style="padding: 10px; font-size: 0.9rem; display:none; background: #10b981; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">Create Account</button>
-                
-                <p style="font-size: 0.75rem; text-align: center; margin-top: 10px; cursor: pointer; color: #e0f2fe; font-weight: 600;" onclick="toggleAuthMode()" id="authToggleText">Need an account? Sign Up</p>
-            </div>
-
-            <div id="loggedInBox" style="display: none;">
-                <button class="btn-danger-outline" onclick="handleSupabaseLogout()" style="padding: 10px; font-size: 0.9rem; color: #fca5a5; border-color: #fca5a5; background: rgba(239,68,68,0.1);">Log Out Securely</button>
-            </div>
-        </div>
+        <h3 id="userNameDisplay" style="font-size:1rem; font-weight:700; margin-top:5px;">User Name</h3>
+        <p id="userEmailDisplay" style="font-size:0.75rem; opacity:0.9; margin-top:2px;">user@example.com</p>
     </div>
 
     <div class="sidebar-menu-list">
@@ -376,6 +396,12 @@
         <div class="menu-category-title" data-i18n="system">System</div>
         <div class="menu-link-btn" onclick="window.openSettingsPage()"><i class="fa-solid fa-gear" style="color:#64748b;"></i><span data-i18n="settings">Settings</span></div>
         <div class="menu-link-btn" onclick="window.openAboutModal()"><i class="fa-solid fa-circle-info" style="color:#0ea5e9;"></i><span data-i18n="about">About App</span></div>
+        
+        <div style="margin-top: auto; padding-top:20px;">
+            <div class="menu-link-btn" onclick="window.handleSupabaseLogout()" style="background: rgba(239,68,68,0.1); color: #ef4444;">
+                <i class="fa-solid fa-right-from-bracket"></i> <span>Logout Securely</span>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -462,54 +488,74 @@
         toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
-    /* ====== SUPABASE LIVE DATA SYNC ====== */
+    /* ====== SUPABASE LIVE DATA SYNC & INDICATOR ====== */
+    function setSyncStatus(status) {
+        const ind = document.getElementById('sync-indicator');
+        if(!navigator.onLine) status = 'offline';
+        
+        if(status === 'syncing') {
+            ind.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color:#2563eb;"></i>';
+        } else if(status === 'synced') {
+            ind.innerHTML = '<span style="color:#10b981; font-size:1.1rem;">✅</span>☁️';
+        } else {
+            ind.innerHTML = '<span style="color:#ef4444; font-size:1.1rem;">❌</span>☁️';
+        }
+    }
+    
+    window.addEventListener('online', () => { setSyncStatus('synced'); syncToSupabase(); });
+    window.addEventListener('offline', () => setSyncStatus('offline'));
+
     async function syncToSupabase() {
         if (!appState.user.isLoggedIn || !appState.user.id) return;
+        setSyncStatus('syncing');
         try {
-            // Keep local arrays exactly as they are, sync the whole blob to user's row
             const dataToSync = JSON.parse(JSON.stringify(appState));
-            delete dataToSync.user; // Don't upload local auth status
+            delete dataToSync.user; 
             delete dataToSync.orphanPoleIds; 
+            delete dataToSync.liveTrackId;
+            delete dataToSync.liveMarker;
             
             await supabaseClient.from('survey_data').upsert({
                 user_id: appState.user.id,
                 data: dataToSync,
                 updated_at: new Date().toISOString()
             });
-        } catch (err) { console.error("Supabase Sync Failed:", err); }
+            setSyncStatus('synced');
+        } catch (err) { 
+            console.error("Supabase Sync Failed:", err); 
+            setSyncStatus('offline');
+        }
     }
 
     async function pullFromSupabase() {
         if (!appState.user.isLoggedIn || !appState.user.id) return;
+        setSyncStatus('syncing');
         try {
             const { data, error } = await supabaseClient.from('survey_data').select('data').eq('user_id', appState.user.id).single();
             if (data && data.data && Object.keys(data.data).length > 0) {
                 const cloudData = data.data;
-                // Merge cloud data safely while preserving local settings/auth
                 appState.feeders = cloudData.feeders || appState.feeders;
                 appState.gssNodes = cloudData.gssNodes || appState.gssNodes;
                 appState.currentFeederCode = cloudData.currentFeederCode || appState.currentFeederCode;
                 renderEntireNetwork();
-                showToast("Live Sync Restored!");
+                setSyncStatus('synced');
             } else {
-                // If database is empty, push the local data up
                 syncToSupabase();
             }
-        } catch (err) { console.log("No cloud data found or offline"); }
+        } catch (err) { setSyncStatus('offline'); }
     }
 
-    // Trigger Persistence hooks into Live Sync safely
     async function triggerPersistence() { 
         try { await localforage.setItem(DB_KEY, appState); } catch (err) { localStorage.setItem(DB_KEY, JSON.stringify(appState)); } 
-        syncToSupabase(); // Push updates gracefully in background
+        syncToSupabase(); 
     }
 
     /* ====== SUPABASE AUTHENTICATION ====== */
     let authMode = 'login';
     window.toggleAuthMode = function() {
         authMode = authMode === 'login' ? 'signup' : 'login';
-        document.getElementById('loginBtn').style.display = authMode === 'login' ? 'block' : 'none';
-        document.getElementById('signupBtn').style.display = authMode === 'signup' ? 'block' : 'none';
+        document.getElementById('loginBtn').style.display = authMode === 'login' ? 'inline-block' : 'none';
+        document.getElementById('signupBtn').style.display = authMode === 'signup' ? 'inline-block' : 'none';
         document.getElementById('signupNameField').style.display = authMode === 'signup' ? 'block' : 'none';
         document.getElementById('authToggleText').innerText = authMode === 'login' ? "Need an account? Sign Up" : "Already have an account? Login";
     }
@@ -535,7 +581,7 @@
             alert(response.error.message);
         } else if (response.data.user) {
             updateAuthUI(response.data.user);
-            pullFromSupabase(); // Immediately fetch user's cloud network
+            pullFromSupabase(); 
             showToast("Auth Successful!");
         }
     }
@@ -544,11 +590,9 @@
         await supabaseClient.auth.signOut();
         appState.user = { isLoggedIn: false, name: "", email: "", id: null };
         triggerPersistence();
-        document.getElementById('authForms').style.display = 'block';
-        document.getElementById('loggedInBox').style.display = 'none';
-        document.getElementById('userNameDisplay').style.display = 'none';
-        document.getElementById('userEmailDisplay').style.display = 'none';
-        document.getElementById('sidebarProfileImg').style.display = 'none';
+        document.getElementById('app-container').style.display = 'none';
+        document.getElementById('auth-screen').style.display = 'flex';
+        window.toggleSidebar(false);
         showToast("Logged out successfully");
     }
 
@@ -561,15 +605,11 @@
         
         triggerPersistence();
 
-        document.getElementById('authForms').style.display = 'none';
-        document.getElementById('loggedInBox').style.display = 'block';
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'flex';
         
         document.getElementById('userNameDisplay').innerText = appState.user.name;
         document.getElementById('userEmailDisplay').innerText = appState.user.email;
-        
-        document.getElementById('userNameDisplay').style.display = 'block';
-        document.getElementById('userEmailDisplay').style.display = 'block';
-        document.getElementById('sidebarProfileImg').style.display = 'flex';
         
         document.getElementById('authEmail').value = '';
         document.getElementById('authPassword').value = '';
@@ -581,19 +621,10 @@
             updateAuthUI(data.session.user);
             pullFromSupabase();
         } else {
-            // Restore local UI state if logged out
-            if (appState.user.isLoggedIn) {
-                document.getElementById('authForms').style.display = 'none';
-                document.getElementById('loggedInBox').style.display = 'block';
-                document.getElementById('userNameDisplay').innerText = appState.user.name;
-                document.getElementById('userEmailDisplay').innerText = appState.user.email;
-                document.getElementById('userNameDisplay').style.display = 'block';
-                document.getElementById('userEmailDisplay').style.display = 'block';
-                document.getElementById('sidebarProfileImg').style.display = 'flex';
-            }
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
         }
     }
-
 
     function loadPersistedData(callback) {
         let loaded = false;
@@ -937,7 +968,15 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
+    /* ====== MARKER CLUSTERING SETUP ====== */
+    const featureGroups = { 
+        gss: L.layerGroup().addTo(map), 
+        lines: L.layerGroup().addTo(map), 
+        consumerLines: L.layerGroup().addTo(map),
+        poles: L.markerClusterGroup({ disableClusteringAtZoom: 18, maxClusterRadius: 40 }).addTo(map), 
+        dts: L.markerClusterGroup({ disableClusteringAtZoom: 17, maxClusterRadius: 40 }).addTo(map), 
+        consumers: L.markerClusterGroup({ disableClusteringAtZoom: 19, maxClusterRadius: 30 }).addTo(map) 
+    };
 
     map.on('move', () => { const c = map.getCenter(); document.getElementById('reticle-coordinates').innerText = `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`; });
     map.on('zoomend', () => renderEntireNetwork());
@@ -962,7 +1001,8 @@
 
     function renderEntireNetwork() {
         try {
-            updateOrphanStatus(); Object.values(featureGroups).forEach(g => g.clearLayers());
+            updateOrphanStatus(); 
+            Object.values(featureGroups).forEach(g => g.clearLayers());
             const net = getActiveNetwork(), f = appState.filters, currentZoom = map.getZoom();
             const showConsumers = currentZoom >= 19 && f.consumers; const showLTPoles = currentZoom >= 17 && f.poles;
             const showDTs = currentZoom >= 16 && f.dts; const showHTPoles = currentZoom >= 15 && f.poles;
@@ -1012,6 +1052,11 @@
                 });
             });
 
+            // CLUSTERING OPTIMIZATION: Collect markers in arrays first
+            const poleMarkers = [];
+            const dtMarkers = [];
+            const consMarkers = [];
+
             if (f.poles) {
                 net.poles.forEach(p => {
                     const isOrphan = appState.orphanPoleIds.has(p.id); const isLT = p.lineType === 'LT';
@@ -1036,7 +1081,7 @@
                         }) 
                     });
                     m.bindPopup(`<div style="padding:4px;"><b>Pole: ${p.poleNo} (${p.lineType || 'HT'})</b><p style="margin:4px 0; font-size:0.8rem;">Parent: ${p.dtCode || 'Feeder'}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#eff6ff; border:none; border-radius:6px;" onclick="window.openEditModal('pole','${p.id}')">Edit</button><button style="flex:1; padding:8px; background:#fef3c7; border:none; border-radius:6px;" onclick="window.startObjectMove('POLE','${p.id}','${p.poleNo}')">Move</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="window.deleteEntity('pole','${p.id}')">Delete</button></div></div>`);
-                    featureGroups.poles.addLayer(m);
+                    poleMarkers.push(m);
                 });
             }
 
@@ -1061,7 +1106,7 @@
 
                         const m = L.marker([dLatOffset, dLngOffset], { icon: L.divIcon({ className: 'dt-square-icon' + (isOrphan ? ' orphan-pulse' : ''), html: `${d.rating}`, iconSize: [22,22], iconAnchor: [11,11] }) });
                         m.bindPopup(`<div style="padding:4px;"><b style="color:#d97706;">DT: ${d.code}</b><p style="margin:4px 0;">Rating: ${d.rating} kVA<br>Loc: ${d.location || 'N/A'}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#eff6ff; border:none; border-radius:6px;" onclick="window.openEditModal('dt','${d.id}')">Edit</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="window.deleteEntity('dt','${d.id}')">Delete</button></div></div>`);
-                        featureGroups.dts.addLayer(m);
+                        dtMarkers.push(m);
                     });
                 });
             }
@@ -1085,9 +1130,14 @@
 
                     const m = L.marker([c.lat, c.lng], { icon: L.divIcon({ className: 'consumer-marker-icon', html: `<i class="fa-solid fa-house"></i>`, iconSize: [18,18], iconAnchor: [9,9] }) });
                     m.bindPopup(`<div style="padding:4px;"><b>${c.name}</b><p style="color:#64748b; margin:4px 0;">K-No: ${c.kno} | Connected to: ${c.parentRef}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:6px; background:#eff6ff; border:none; border-radius:6px;" onclick="window.openEditModal('consumer','${c.id}')">Edit</button><button style="flex:1; padding:6px; background:#fef3c7; border:none; border-radius:6px;" onclick="window.startObjectMove('CONSUMER','${c.id}','${c.name}')">Move</button><button style="flex:1; padding:6px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="window.deleteEntity('consumer','${c.id}')">Delete</button></div></div>`);
-                    featureGroups.consumers.addLayer(m);
+                    consMarkers.push(m);
                 });
             }
+
+            // ADD TO CLUSTERS
+            featureGroups.poles.addLayers(poleMarkers);
+            featureGroups.dts.addLayers(dtMarkers);
+            featureGroups.consumers.addLayers(consMarkers);
 
             // KPI BAR METRICS LOGIC
             let t11 = 0, tLT = 0; 
@@ -1858,9 +1908,11 @@
     }
 
     function initializeApplication() { 
-        loadPersistedData(() => { 
+        loadPersistedData(async () => { 
             translateApp(); 
-            checkSupabaseSession(); // Check Cloud Auth status on boot
+            
+            // Wait for session check before hiding splash
+            await checkSupabaseSession(); 
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
