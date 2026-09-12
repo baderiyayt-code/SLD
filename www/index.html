@@ -66,6 +66,20 @@
         #layer-indicator { position: absolute; top: calc(75px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
         #reticle-coordinates { position: absolute; bottom: calc(105px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); pointer-events: none; z-index: 999; }
 
+        /* ====== SCREEN CENTER PIN (NEW ROBUST APPROACH) ====== */
+        #center-placement-pin {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -100%);
+            z-index: 1500; /* Overrides everything on the map */
+            pointer-events: none; /* Map panning works underneath it */
+            display: none; /* Hidden by default */
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
+            animation: floatScreenPin 1s ease-in-out infinite alternate;
+        }
+        @keyframes floatScreenPin { 0% { transform: translate(-50%, -100%); } 100% { transform: translate(-50%, calc(-100% - 10px)); } }
+
         /* ====== FLOATING TOOLS ====== */
         .right-tools-stack { position: absolute; right: 12px; bottom: calc(120px + env(safe-area-inset-bottom, 0px)); z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
         .round-tool-btn { width: 44px; height: 44px; background: var(--bg-sheet); color: var(--text-main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); cursor: pointer; }
@@ -103,10 +117,7 @@
         
         .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5);}
         
-        /* Fixed Pin Animation */
-        .placement-pin-robust { animation: floatPin 1s ease-in-out infinite alternate; display:flex; justify-content:center; align-items:flex-end; }
         @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
-        @keyframes floatPin { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
 
         /* ====== MODALS ====== */
         .modal-overlay, #sidebarBackdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 3000; display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.2s;}
@@ -186,6 +197,13 @@
     <div id="map"></div>
     <div id="reticle-coordinates">0.000000, 0.000000</div>
 
+    <!-- NEW SCREEN-CENTER FLOATING PIN -->
+    <div id="center-placement-pin">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/>
+        </svg>
+    </div>
+
     <div class="right-tools-stack">
         <button class="round-tool-btn" onclick="toggleMapLayer()"><i class="fa-solid fa-layer-group" style="color:#0ea5e9;"></i></button>
         <button class="round-tool-btn" id="liveTrackBtn" onclick="toggleLiveTracking()"><i class="fa-solid fa-crosshairs" style="color:#ef4444;"></i></button>
@@ -207,9 +225,9 @@
         <div class="center-plus-fab" id="mainFabBtn" onclick="toggleSpeedDial()"><i class="fa-solid fa-plus"></i></div>
     </div>
 
-    <!-- DYNAMIC PIN CONFIRMATION BAR -->
+    <!-- SCREEN-CENTER PIN CONFIRMATION BAR -->
     <div id="placement-confirm-bar" class="floating-action-bar">
-        <div><b style="color:var(--accent); font-size:1.0rem;"><i class="fa-solid fa-location-dot"></i> Confirm Placement Location</b></div>
+        <div><b style="color:var(--accent); font-size:1.0rem;"><i class="fa-solid fa-location-dot"></i> Confirm Map Center Location</b></div>
         <div style="display:flex; gap:8px; margin-top:4px;">
             <button class="btn-action-primary" style="margin:0;" onclick="confirmPlacement()">Confirm Here</button>
             <button class="btn-danger-outline" style="margin:0;" onclick="cancelPlacement()">Cancel</button>
@@ -324,7 +342,6 @@
     };
 
     let historyStack = [];
-    let placementMarker = null;
 
     function getActiveNetwork() {
         if (!appState.feeders[appState.currentFeederCode]) appState.currentFeederCode = Object.keys(appState.feeders)[0] || "FDR-01";
@@ -522,7 +539,6 @@
     map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 460;
     map.createPane('dtPane'); map.getPane('dtPane').style.zIndex = 650; // DT directly over HT Poles
     map.createPane('consumerPane'); map.getPane('consumerPane').style.zIndex = 700;
-    map.createPane('pinPane'); map.getPane('pinPane').style.zIndex = 10000; // Guaranteed Pin Visibility
 
     const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
 
@@ -624,6 +640,7 @@
 
                     if (!c.lat || !c.lng) { c.lat = parentCoord.lat + 0.0001; c.lng = parentCoord.lng + 0.0001; }
                     if (f.poles && currentZoom >= 16 && parentCoord) { 
+                        // Thin, black, dashed line for Consumer connectivity
                         L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#000000', weight: 1.5, dashArray: '2,4', opacity: 0.7, pane: 'bgLinesPane' }).addTo(featureGroups.consumerLines); 
                     }
                     
@@ -652,7 +669,6 @@
     
     window.renderGssSidebarList = function() {
         const container = document.getElementById('gssListContainer');
-        // Now calling promptDeleteGss for STRICT DELETION
         container.innerHTML = Object.values(appState.gssNodes).map(g => `<div style="padding:6px 12px; font-size:0.8rem; background:#f8fafc; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;"><span><i class="fa-solid fa-building-circle-check" style="color:#b91c1c; margin-right:6px;"></i> ${g.code}</span><div><button style="border:none; background:transparent; color:#2563eb; cursor:pointer; margin-right:6px;" onclick="window.relocateGss('${g.code}')"><i class="fa-solid fa-crosshairs"></i></button> <button style="border:none; background:transparent; color:#ef4444; cursor:pointer;" onclick="window.promptDeleteGss('${g.code}')"><i class="fa-solid fa-trash"></i></button></div></div>`).join('');
     }
 
@@ -693,29 +709,18 @@
         closeModal(); renderEntireNetwork(); triggerPersistence(); window.renderGssSidebarList(); showToast("GSS Deleted Successfully");
     }
 
-    /* ====== DYNAMIC PIN PLACEMENT LOGIC ====== */
+    /* ====== DYNAMIC PIN PLACEMENT (SCREEN CENTER) LOGIC ====== */
     window.openAddForm = function(type) {
         window.toggleSpeedDial(false); 
-        // ONLY show pin for POLE, LTPOLE, and CONSUMER. Lines & DT bypass the pin.
+        
+        // Only show pin for POLE, LTPOLE, and CONSUMER. Lines & DT bypass the pin.
         if (type === 'POLE' || type === 'LTPOLE' || type === 'CONSUMER') { 
             appState.placementType = type;
-            const center = map.getCenter();
             
-            // Inline SVG guaranteed to load offline and bypass font-awesome failures
-            const inlineSvgPin = `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#ef4444" stroke="#ffffff" stroke-width="1.5"/></svg>`;
-
-            placementMarker = L.marker(center, { 
-                draggable: true, 
-                pane: 'pinPane', // Very high z-index pane so it's always on top
-                zIndexOffset: 10000,
-                icon: L.divIcon({ 
-                    className: 'placement-pin-robust', 
-                    html: inlineSvgPin, 
-                    iconSize: [40, 40], 
-                    iconAnchor: [20, 40] 
-                }) 
-            }).addTo(map);
+            // Show the static screen-center pin
+            document.getElementById('center-placement-pin').style.display = 'block';
             
+            // Hide standard buttons, show confirm bar
             document.getElementById('bottom-single-action').style.display = 'none';
             document.getElementById('placement-confirm-bar').style.display = 'flex';
         } else {
@@ -724,17 +729,23 @@
     }
 
     window.confirmPlacement = function() {
-        if(!placementMarker) return;
-        const pos = placementMarker.getLatLng();
-        const lat = parseFloat(pos.lat.toFixed(6)); const lng = parseFloat(pos.lng.toFixed(6));
-        map.removeLayer(placementMarker); placementMarker = null;
-        document.getElementById('placement-confirm-bar').style.display = 'none'; document.getElementById('bottom-single-action').style.display = 'block';
+        // Hide the pin and confirm bar
+        document.getElementById('center-placement-pin').style.display = 'none';
+        document.getElementById('placement-confirm-bar').style.display = 'none';
+        document.getElementById('bottom-single-action').style.display = 'block';
+        
+        // Grab exactly what's currently in the center of the map
+        const center = map.getCenter();
+        const lat = parseFloat(center.lat.toFixed(6)); 
+        const lng = parseFloat(center.lng.toFixed(6));
+        
         window.showFormModal(appState.placementType, lat, lng);
     }
 
     window.cancelPlacement = function() {
-        if(placementMarker) map.removeLayer(placementMarker); placementMarker = null;
-        document.getElementById('placement-confirm-bar').style.display = 'none'; document.getElementById('bottom-single-action').style.display = 'block';
+        document.getElementById('center-placement-pin').style.display = 'none';
+        document.getElementById('placement-confirm-bar').style.display = 'none';
+        document.getElementById('bottom-single-action').style.display = 'block';
     }
 
     /* ====== GLOBAL EDIT / DELETE / MOVE LOGIC ====== */
@@ -821,7 +832,7 @@
                 const p = net.poles.find(x => x.id === appState.activeMove.id);
                 if (p) {
                     p.lat = lat; p.lng = lng;
-                    net.dts.forEach(d => { if (d.parentPole == p.poleNo) { d.lat = lat; d.lng = lng; } }); // Ensure DT moves with Pole
+                    net.dts.forEach(d => { if (d.parentPole == p.poleNo) { d.lat = lat; d.lng = lng; } }); 
                     net.lines.forEach(l => { if (l.fromNode == p.poleNo) { l.coords[0] = [lat, lng]; l.distanceMeters = calcDistance(lat, lng, l.coords[1][0], l.coords[1][1]); } if (l.toNode == p.poleNo) { l.coords[1] = [lat, lng]; l.distanceMeters = calcDistance(l.coords[0][0], l.coords[0][1], lat, lng); } });
                 }
             } 
@@ -895,6 +906,7 @@
                 <button class="btn-action-primary" onclick="window.saveNewLTPole()">Save LT Pole</button>`);
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
+            
             const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: p.poleNo, lat: p.lat, lng: p.lng}));
             const feederGss = appState.gssNodes[net.feeder.parentGss];
             if(feederGss) htNodes.push({id: feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
@@ -927,6 +939,7 @@
             setTimeout(() => window.updateDTRatingDropdowns('inpDTPhase', 'inpDTRating'), 30);
         } else if (type === 'CONSUMER') {
             if (net.dts.length === 0) return alert("Must have at least one DT to connect Consumer!");
+            
             const ltPoles = net.poles.filter(p => p.lineType === 'LT');
             let nearestLTPole = findNearestNode(snapLat, snapLng, ltPoles.map(p => ({id: p.poleNo, lat: p.lat, lng: p.lng})));
             
