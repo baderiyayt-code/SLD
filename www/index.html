@@ -44,11 +44,9 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body, html { width: 100%; height: 100%; overflow: hidden; background: var(--bg-base); color: var(--text-main); }
         
-        /* HIDDEN INITIALLY UNTIL AUTH VERIFIED */
         #app-container { position: relative; width: 100%; height: 100%; display: none; flex-direction: column; }
 
         /* ====== SPLASH SCREEN ====== */
-        /* FIX: Splash Screen moved OUTSIDE app-container to show during boot process */
         #splash-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #2563eb); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; transition: opacity 0.6s ease, transform 0.6s ease; }
         #splash-screen.hidden { opacity: 0; pointer-events: none; transform: scale(1.05); }
         .splash-logo { width: 100px; height: 100px; background: white; color: #2563eb; border-radius: 28px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); animation: pulse 2s infinite; }
@@ -58,7 +56,7 @@
         @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 20px rgba(255,255,255,0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ====== FULL SCREEN AUTH SCREEN (GLASSMORPHISM) ====== */
+        /* ====== FULL SCREEN AUTH SCREEN ====== */
         #auth-screen { position: fixed; inset: 0; background: linear-gradient(135deg, #1e3a8a, #2563eb); z-index: 50000; display: flex; align-items: center; justify-content: center; }
         .auth-card { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 24px; padding: 40px 24px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3); }
         .auth-card .auth-logo { font-size: 3rem; color: white; margin-bottom: 10px; }
@@ -73,17 +71,13 @@
 
         /* ====== TOP HEADER & DASHBOARD ====== */
         #top-bar { position: absolute; top: env(safe-area-inset-top, 10px); left: 12px; right: 12px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        
         .header-glass { display: flex; justify-content: space-between; align-items: center; background: var(--bg-glass); backdrop-filter: blur(16px); padding: 10px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; }
         .header-title-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
         .modern-select { appearance: none; background: #f1f5f9; color: var(--text-main); border: 1px solid transparent; padding: 8px 30px 8px 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; outline: none; cursor: pointer; max-width: 160px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
-        
         .header-actions { display: flex; align-items: center; gap: 6px; }
         .action-btn-sm { width: 44px; height: 44px; border-radius: var(--radius-md); background: transparent; color: var(--accent); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; pointer-events: auto; transition: transform 0.1s ease; }
         .action-btn-sm:active { transform: scale(0.92); opacity: 0.8; }
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
-
-        /* Sync Indicator */
         #sync-indicator { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; background: rgba(255,255,255,0.7); border-radius: var(--radius-md); font-size: 0.9rem; border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto;}
 
         /* ====== SEARCH BAR ====== */
@@ -107,14 +101,10 @@
 
         /* ====== MAP ====== */
         #map { flex: 1; width: 100%; height: 100%; z-index: 1; background: #e2e8f0; }
-        
         #layer-indicator { position: absolute; top: calc(165px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
         #reticle-coordinates { position: absolute; bottom: calc(105px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); pointer-events: none; z-index: 999; }
 
-        /* ====== SCREEN CENTER PIN ====== */
         #center-placement-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 1500; pointer-events: none; display: none; font-size: 48px; text-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        
-        /* ====== LIVE MOVE ICON ====== */
         #live-move-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1500; pointer-events: none; display: none; }
 
         /* ====== FLOATING TOOLS ====== */
@@ -127,7 +117,6 @@
         #bottom-single-action { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 1002; }
         .center-plus-fab { width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; border: 3px solid var(--bg-sheet); box-shadow: 0 8px 25px var(--accent-glow); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s; }
         .center-plus-fab.open { transform: rotate(45deg); background: #ef4444; box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3); }
-
         #speed-dial-menu { position: absolute; bottom: calc(95px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) scale(0.9); width: calc(100% - 24px); max-width: 450px; background: var(--bg-glass); backdrop-filter: blur(20px); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: all 0.2s; z-index: 1001; }
         #speed-dial-menu.active { opacity: 1; pointer-events: auto; transform: translateX(-50%) scale(1); }
         .dial-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
@@ -152,7 +141,6 @@
         .lt-pole-icon { background: #10b981; color: white; border: 1.5px solid white; border-radius: 50%; font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 18px; height: 18px;}
         .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5);}
         .live-person-marker { background: rgba(255, 255, 255, 0.9); border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 12px rgba(59, 130, 246, 0.6); }
-        
         @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
         /* ====== MODALS ====== */
@@ -178,7 +166,6 @@
         
         .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s ease; }
         .btn-action-primary:active { transform: scale(0.97); opacity: 0.9; }
-        
         .btn-danger-outline { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid #ef4444; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s ease; }
         .btn-danger-outline:active { transform: scale(0.97); opacity: 0.9; }
 
@@ -192,9 +179,7 @@
         #sidebar-drawer { position: fixed; top: 0; left: 0; width: 80%; max-width: 300px; height: 100%; background: #ffffff; z-index: 4500; transform: translateX(-100%); transition: transform 0.2s; display: flex; flex-direction: column; box-shadow: var(--shadow-lg); }
         #sidebar-drawer.open { transform: translateX(0); }
         .sidebar-header-gradient { padding: 24px 16px 16px; background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; }
-        
         .user-profile-img { width: 50px; height: 50px; border-radius: 50%; border: 2px solid white; object-fit: cover; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #2563eb; background: white;}
-        
         .sidebar-menu-list { flex: 1; overflow-y: auto; padding: 16px; display:flex; flex-direction:column;}
         .menu-category-title { font-size: 0.7rem; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin: 16px 0 8px 4px; }
         .menu-link-btn { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--text-main);}
@@ -204,7 +189,7 @@
 </head>
 <body>
 
-<!-- SPLASH SCREEN: MOVED OUTSIDE SO IT SHOWS GLOBALLY ON BOOT -->
+<!-- SPLASH SCREEN -->
 <div id="splash-screen">
     <div class="splash-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
     <h1 class="splash-title">DISCOM Pro</h1>
@@ -213,7 +198,7 @@
     <div class="splash-loader"></div>
 </div>
 
-<!-- AUTH SCREEN: SHOWN IF NOT LOGGED IN -->
+<!-- AUTH SCREEN -->
 <div id="auth-screen" style="display: none;">
     <div class="auth-card">
         <div class="auth-logo"><i class="fa-solid fa-bolt-lightning"></i></div>
@@ -233,13 +218,10 @@
     </div>
 </div>
 
-<!-- MAIN APP: HIDDEN UNTIL LOGGED IN -->
+<!-- MAIN APP -->
 <div id="app-container">
-    
-    <!-- NOTIFICATION TOAST -->
     <div id="app-toast"><i class="fa-solid fa-circle-check" style="color:#4ade80;"></i> <span id="toast-msg">Success</span></div>
 
-    <!-- TOP BAR -->
     <div id="top-bar">
         <div class="header-glass">
             <div class="header-title-group">
@@ -252,16 +234,12 @@
                 <button class="action-btn-sm bg" onclick="window.runOrphanNodeChecker()"><i class="fa-solid fa-network-wired" style="color:#d97706;"></i></button>
             </div>
         </div>
-
-        <!-- SEARCH BAR -->
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass" style="color:var(--text-sub);"></i>
             <input type="text" id="appSearchBar" class="search-input" placeholder="Search K-No, Name, DT Code..." oninput="window.handleSearch(event)" autocomplete="off">
             <i class="fa-solid fa-xmark" id="clearSearchBtn" style="color:var(--text-sub); display:none; cursor:pointer;" onclick="window.clearSearch()"></i>
             <div id="searchSuggestions" class="suggestions-panel"></div>
         </div>
-
-        <!-- KPI BAR (5 items) -->
         <div class="kpi-row">
             <div class="kpi-tile"><div class="kpi-label" data-i18n="line11">11 KV Line</div><div class="kpi-val" id="kpi11">0 M</div></div>
             <div class="kpi-tile"><div class="kpi-label" data-i18n="lineLT">LT Line</div><div class="kpi-val" id="kpiLT">0 M</div></div>
@@ -272,15 +250,9 @@
     </div>
 
     <div id="layer-indicator" data-i18n="hybridMap">Hybrid Map</div>
-
-    <!-- MAP CANVAS -->
     <div id="map"></div>
     <div id="reticle-coordinates">0.000000, 0.000000</div>
-
-    <!-- SCREEN-CENTER STATIC PIN (📍) -->
     <div id="center-placement-pin">📍</div>
-    
-    <!-- LIVE MOVE ICON -->
     <div id="live-move-icon"></div>
 
     <div class="right-tools-stack">
@@ -304,7 +276,6 @@
         <div class="center-plus-fab" id="mainFabBtn" onclick="window.toggleSpeedDial()"><i class="fa-solid fa-plus"></i></div>
     </div>
 
-    <!-- SCREEN-CENTER PIN CONFIRMATION BAR -->
     <div id="placement-confirm-bar" class="floating-action-bar">
         <div><b style="color:var(--accent); font-size:1.0rem;"><i class="fa-solid fa-location-dot"></i> <span data-i18n="confirmLoc">Confirm Map Center Location</span></b></div>
         <div style="display:flex; gap:8px; margin-top:4px;">
@@ -313,7 +284,6 @@
         </div>
     </div>
 
-    <!-- MOVE/RELOCATE CONFIRMATION BAR -->
     <div id="move-confirm-bar" class="floating-action-bar">
         <div><b id="moveTargetTitle" style="color:var(--accent); font-size:1.0rem;">Target</b></div>
         <div style="display:flex; gap:8px; margin-top:4px;">
@@ -419,7 +389,7 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // =========================================
 
-    // ADMIN CONFIGURATION - Define the admin email here
+    // ADMIN CONFIGURATION
     const ADMIN_EMAIL = 'admin@discom.com';
 
     let appState = {
@@ -492,7 +462,7 @@
         toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3500);
     }
 
-    /* ====== SUPABASE LIVE DATA SYNC & INDICATOR ====== */
+    /* ====== SUPABASE LIVE DATA SYNC ====== */
     function setSyncStatus(status) {
         const ind = document.getElementById('sync-indicator');
         if(!navigator.onLine) status = 'offline';
@@ -509,6 +479,7 @@
     window.addEventListener('online', () => { setSyncStatus('synced'); syncToSupabase(); });
     window.addEventListener('offline', () => setSyncStatus('offline'));
 
+    // Push local data to cloud
     async function syncToSupabase() {
         if (!appState.user.isLoggedIn || !appState.user.id) return;
         setSyncStatus('syncing');
@@ -523,7 +494,8 @@
                 user_id: appState.user.id,
                 data: dataToSync,
                 updated_at: new Date().toISOString()
-            });
+            }, { onConflict: 'user_id' });
+            
             setSyncStatus('synced');
         } catch (err) { 
             console.error("Supabase Sync Failed:", err); 
@@ -531,7 +503,7 @@
         }
     }
 
-    /* FIX 2: Admin Data Access (Merge logic) */
+    // Pull cloud data to local
     async function pullFromSupabase() {
         if (!appState.user.isLoggedIn || !appState.user.id) return;
         setSyncStatus('syncing');
@@ -539,7 +511,6 @@
             const isAdmin = appState.user.email === ADMIN_EMAIL;
             let query = supabaseClient.from('survey_data').select('data');
             
-            // If normal user, filter by their own user_id. If Admin, pull all rows.
             if (!isAdmin) {
                 query = query.eq('user_id', appState.user.id);
             }
@@ -548,14 +519,11 @@
             
             if (data && data.length > 0) {
                 if (isAdmin) {
-                    // Merge all users' data for Admin
                     appState.feeders = {};
                     appState.gssNodes = {};
-                    
                     data.forEach(row => {
                         const cloudData = row.data;
                         if (cloudData.gssNodes) Object.assign(appState.gssNodes, cloudData.gssNodes);
-                        
                         if (cloudData.feeders) {
                             Object.keys(cloudData.feeders).forEach(fCode => {
                                 if (!appState.feeders[fCode]) {
@@ -572,25 +540,31 @@
                         }
                     });
                 } else {
-                    // Normal user logic
                     const cloudData = data[0].data;
                     appState.feeders = cloudData.feeders || appState.feeders;
                     appState.gssNodes = cloudData.gssNodes || appState.gssNodes;
                     appState.currentFeederCode = cloudData.currentFeederCode || appState.currentFeederCode;
                 }
                 
+                // Save fetched cloud data safely to local memory
+                await localforage.setItem(DB_KEY, appState);
                 renderEntireNetwork();
                 setSyncStatus('synced');
             } else {
-                if (!isAdmin) syncToSupabase();
+                // First time user, push their local template up
+                if (!isAdmin) await syncToSupabase();
                 else setSyncStatus('synced');
             }
-        } catch (err) { setSyncStatus('offline'); }
+        } catch (err) { 
+            console.error(err);
+            setSyncStatus('offline'); 
+        }
     }
 
+    // Called on every map action to save local & push to cloud
     async function triggerPersistence() { 
         try { await localforage.setItem(DB_KEY, appState); } catch (err) { localStorage.setItem(DB_KEY, JSON.stringify(appState)); } 
-        syncToSupabase(); 
+        await syncToSupabase(); 
     }
 
     /* ====== SUPABASE AUTHENTICATION ====== */
@@ -601,6 +575,22 @@
         document.getElementById('signupBtn').style.display = authMode === 'signup' ? 'inline-block' : 'none';
         document.getElementById('signupNameField').style.display = authMode === 'signup' ? 'block' : 'none';
         document.getElementById('authToggleText').innerText = authMode === 'login' ? "Need an account? Sign Up" : "Already have an account? Login";
+    }
+
+    function applyAuthUIVisuals() {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-container').style.display = 'flex';
+        document.getElementById('userNameDisplay').innerText = appState.user.name;
+        document.getElementById('userEmailDisplay').innerText = appState.user.email;
+        document.getElementById('authEmail').value = '';
+        document.getElementById('authPassword').value = '';
+    }
+
+    function setUserStateLocally(user) {
+        appState.user.isLoggedIn = true;
+        appState.user.email = user.email;
+        appState.user.id = user.id;
+        appState.user.name = user.user_metadata?.full_name || user.email.split('@')[0];
     }
 
     window.handleSupabaseAuth = async function(mode) {
@@ -623,21 +613,22 @@
         if (response.error) {
             alert(response.error.message);
         } else if (response.data.user) {
-            updateAuthUI(response.data.user);
-            await pullFromSupabase(); 
-            centerMapOnGSS(); // FIX 4: Center on GSS after login
+            setUserStateLocally(response.data.user);
+            await pullFromSupabase(); // Load cloud data first
+            applyAuthUIVisuals();     // Then show UI
+            centerMapOnGSS();         // Move to GSS
             showToast("Auth Successful!");
         }
     }
 
-    /* FIX 1: Complete State & LocalForage Wipe on Logout */
     window.handleSupabaseLogout = async function() {
         await supabaseClient.auth.signOut();
         
-        // 1. Wipe Offline Database completely
+        // Wipe local device data completely to prevent state bleed
         await localforage.clear();
+        localStorage.removeItem(DB_KEY);
         
-        // 2. Hard Reset Local Memory State
+        // Reset local variables
         appState = {
             settings: { checkOrphanNode: true, unit: 'm', gpsInterval: 3, gpsAccuracy: 10, language: 'en' },
             user: { isLoggedIn: false, name: "", email: "", id: null },
@@ -648,7 +639,6 @@
             orphanPoleIds: new Set(), activeMove: null, placementType: null, liveTrackId: null, liveMarker: null
         };
         
-        // 3. Clear Map Layers to prevent ghosting
         Object.values(featureGroups).forEach(g => g.clearLayers());
         
         document.getElementById('app-container').style.display = 'none';
@@ -657,37 +647,18 @@
         showToast("Logged out successfully");
     }
 
-    function updateAuthUI(user) {
-        if(!user) return;
-        appState.user.isLoggedIn = true;
-        appState.user.email = user.email;
-        appState.user.id = user.id;
-        appState.user.name = user.user_metadata?.full_name || user.email.split('@')[0];
-        
-        triggerPersistence();
-
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('app-container').style.display = 'flex';
-        
-        document.getElementById('userNameDisplay').innerText = appState.user.name;
-        document.getElementById('userEmailDisplay').innerText = appState.user.email;
-        
-        document.getElementById('authEmail').value = '';
-        document.getElementById('authPassword').value = '';
-    }
-
     async function checkSupabaseSession() {
         const { data } = await supabaseClient.auth.getSession();
         if (data && data.session && data.session.user) {
-            updateAuthUI(data.session.user);
-            await pullFromSupabase();
+            setUserStateLocally(data.session.user);
+            await pullFromSupabase(); 
+            applyAuthUIVisuals();
         } else {
             document.getElementById('app-container').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'flex';
         }
     }
 
-    /* FIX 4: Center Map on Active GSS Logic */
     function centerMapOnGSS() {
         const net = getActiveNetwork();
         const gss = appState.gssNodes[net.feeder.parentGss];
@@ -705,32 +676,24 @@
         let loaded = false;
         localforage.getItem(DB_KEY).then(data => {
             if(loaded) return;
-            if (data && data.feeders && appState.user.isLoggedIn) { 
-                appState = data; loaded = true; finalizeLoad(); 
-            } else { checkLocalStorage(); }
+            // Only load local data if it's there. 
+            // We rely on pullFromSupabase to overwrite this if cloud has better data.
+            if (data && data.feeders) { appState = data; loaded = true; finalizeLoad(); }
+            else checkLocalStorage();
         }).catch(e => { if(!loaded) checkLocalStorage(); });
 
         function checkLocalStorage() {
             try { 
                 const lsData = localStorage.getItem(DB_KEY); 
-                if(lsData && appState.user.isLoggedIn) { appState = JSON.parse(lsData); loaded = true; }
+                if(lsData) { appState = JSON.parse(lsData); loaded = true; }
             } catch(e) {}
             finalizeLoad();
         }
 
         function finalizeLoad() {
             if(!appState.gssNodes) appState.gssNodes = {};
-            Object.keys(appState.feeders).forEach(code => {
-                if(appState.feeders[code].gss) {
-                    appState.gssNodes[appState.feeders[code].gss.code] = appState.feeders[code].gss;
-                    delete appState.feeders[code].gss;
-                }
-            });
-            if(Object.keys(appState.gssNodes).length === 0) appState.gssNodes = {"1": { code: "1", name: "132/33 kV GSS", lat: 26.9150, lng: 75.7830 }};
             if(!appState.settings) appState.settings = { checkOrphanNode: true, unit: 'm', gpsInterval: 3, gpsAccuracy: 10, language: 'en' };
-            if(!appState.settings.language) appState.settings.language = 'en';
             if(!appState.user) appState.user = { isLoggedIn: false, name: "", email: "", id: null };
-
             if (callback) callback();
         }
         setTimeout(() => { if(!loaded) finalizeLoad(); }, 1500);
@@ -953,7 +916,6 @@
         });
     }
 
-    /* ====== SMART SEARCH SYSTEM ====== */
     window.handleSearch = function(e) {
         const query = e.target.value.toLowerCase().trim();
         const suggPanel = document.getElementById('searchSuggestions');
@@ -1980,20 +1942,14 @@
     }
 
     function initializeApplication() { 
-        // 1. Show splash immediately (it's already handled via HTML outside the hidden container)
-        
         loadPersistedData(async () => { 
             translateApp(); 
-            
-            // 2. Await authentication check
             await checkSupabaseSession(); 
             
-            // 3. If successfully logged in, set default view to GSS
             if (appState.user.isLoggedIn) {
                 centerMapOnGSS();
             }
             
-            // 4. Smoothly remove splash screen
             setTimeout(() => { 
                 const splash = document.getElementById('splash-screen'); 
                 if(splash) splash.classList.add('hidden'); 
