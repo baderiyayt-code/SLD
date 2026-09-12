@@ -53,13 +53,18 @@
         
         .header-glass { display: flex; justify-content: space-between; align-items: center; background: var(--bg-glass); backdrop-filter: blur(16px); padding: 10px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; }
         .header-title-group { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
-        .modern-select { appearance: none; background: #f1f5f9; color: var(--text-main); border: 1px solid transparent; padding: 8px 30px 8px 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; outline: none; cursor: pointer; max-width: 140px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
+        
+        /* UI FIX: Increased max-width for modern-select */
+        .modern-select { appearance: none; background: #f1f5f9; color: var(--text-main); border: 1px solid transparent; padding: 8px 30px 8px 12px; border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 700; outline: none; cursor: pointer; max-width: 160px; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 8px center; background-size: 14px; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;}
+        
         .header-actions { display: flex; gap: 6px; }
-        .action-btn-sm { width: 38px; height: 38px; border-radius: var(--radius-md); background: transparent; color: var(--accent); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; pointer-events: auto; }
+        
+        /* UI FIX: Increased touch target size for mobile to 44px */
+        .action-btn-sm { width: 44px; height: 44px; border-radius: var(--radius-md); background: transparent; color: var(--accent); border: none; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; pointer-events: auto; transition: transform 0.1s ease; }
+        .action-btn-sm:active { transform: scale(0.92); opacity: 0.8; }
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
 
         /* ====== SEARCH BAR ====== */
-        /* FIX 4: Implemented strictly elevated Z-Index mapping for overlapping */
         .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 2000; }
         .search-input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
         .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 2500; }
@@ -71,16 +76,19 @@
         .sugg-desc { font-size: 0.7rem; font-weight: 600; color: var(--text-sub); margin-top: 2px;}
 
         /* ====== KPI BAR ====== */
-        /* FIX 4: Explicit lower index underneath search components */
-        .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; pointer-events: auto; position: relative; z-index: 1;}
-        .kpi-tile { background: var(--bg-glass); backdrop-filter: blur(12px); padding: 8px 2px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 3px solid transparent;}
+        /* UI FIX: Changed to Flexbox with overflow-x auto for small screens */
+        .kpi-row { display: flex; gap: 6px; pointer-events: auto; position: relative; z-index: 1; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+        .kpi-row::-webkit-scrollbar { display: none; }
+        .kpi-tile { flex: 1; min-width: 65px; background: var(--bg-glass); backdrop-filter: blur(12px); padding: 8px 2px; border-radius: var(--radius-md); text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; justify-content: center; border-top: 3px solid transparent;}
         .kpi-tile:nth-child(1) { border-top-color: var(--c-11kv); } .kpi-tile:nth-child(2) { border-top-color: var(--c-dt); } .kpi-tile:nth-child(3) { border-top-color: var(--c-lt); } .kpi-tile:nth-child(4) { border-top-color: #8b5cf6; } .kpi-tile:nth-child(5) { border-top-color: #ec4899; }
         .kpi-label { font-size: 0.50rem; color: var(--text-sub); font-weight: 800; text-transform: uppercase; white-space: nowrap;}
         .kpi-val { font-size: 0.90rem; font-weight: 800; margin-top: 2px; }
 
         /* ====== MAP ====== */
         #map { flex: 1; width: 100%; height: 100%; z-index: 1; background: #e2e8f0; }
-        #layer-indicator { position: absolute; top: calc(120px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
+        
+        /* UI FIX: Moved Layer indicator down to avoid Search bar overlap */
+        #layer-indicator { position: absolute; top: calc(165px + env(safe-area-inset-top, 10px)); left: 50%; transform: translateX(-50%); background: var(--bg-glass); color: var(--text-main); padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: 800; box-shadow: var(--shadow-sm); z-index: 999; border: 1px solid var(--border); pointer-events:none;}
         #reticle-coordinates { position: absolute; bottom: calc(105px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); background: #1e293b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-sm); pointer-events: none; z-index: 999; }
 
         /* ====== SCREEN CENTER PIN (STATIC) ====== */
@@ -91,7 +99,8 @@
 
         /* ====== FLOATING TOOLS ====== */
         .right-tools-stack { position: absolute; right: 12px; bottom: calc(120px + env(safe-area-inset-bottom, 0px)); z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
-        .round-tool-btn { width: 44px; height: 44px; background: var(--bg-sheet); color: var(--text-main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); cursor: pointer; }
+        .round-tool-btn { width: 44px; height: 44px; background: var(--bg-sheet); color: var(--text-main); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow-sm); border: 1px solid var(--border); cursor: pointer; transition: transform 0.1s ease; }
+        .round-tool-btn:active { transform: scale(0.92); opacity: 0.8; }
         .undo-btn { background: #f59e0b; color: white; border-color: #f59e0b; }
 
         /* ====== SPEED DIAL & FAB ====== */
@@ -102,7 +111,8 @@
         #speed-dial-menu { position: absolute; bottom: calc(95px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%) scale(0.9); width: calc(100% - 24px); max-width: 450px; background: var(--bg-glass); backdrop-filter: blur(20px); border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none; transition: all 0.2s; z-index: 1001; }
         #speed-dial-menu.active { opacity: 1; pointer-events: auto; transform: translateX(-50%) scale(1); }
         .dial-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-        .dial-card { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; box-shadow: var(--shadow-sm); }
+        .dial-card { background: #ffffff; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 4px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; box-shadow: var(--shadow-sm); transition: transform 0.1s ease; }
+        .dial-card:active { transform: scale(0.95); }
         .dial-card i { font-size: 1.3rem; }
         .dial-card span { font-size: 0.60rem; font-weight: 700; color: var(--text-main); text-align: center;}
 
@@ -131,7 +141,9 @@
         /* ====== MODALS ====== */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); z-index: 3000; display: none; align-items: flex-end; justify-content: center; opacity: 0; transition: opacity 0.2s; }
         .modal-overlay.open { display: flex; opacity: 1; }
-        .modal-sheet { width: 100%; max-width: 500px; background: var(--bg-sheet); border-radius: 24px 24px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s; }
+        
+        /* UI FIX: Added extra padding-bottom so keyboard doesn't hide save button */
+        .modal-sheet { width: 100%; max-width: 500px; background: var(--bg-sheet); border-radius: 24px 24px 0 0; padding: 20px 20px 40px 20px; max-height: 90vh; overflow-y: auto; transform: translateY(100%); transition: transform 0.3s; }
         .modal-overlay.open .modal-sheet { transform: translateY(0); }
         .modal-sheet::before { content: ""; display: block; width: 40px; height: 4px; background: #cbd5e1; border-radius: 10px; margin: 0 auto 16px; }
 
@@ -140,7 +152,10 @@
 
         .sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .sheet-title { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 8px;}
-        .sheet-close-btn { background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 1rem; color: var(--text-sub); cursor: pointer; }
+        
+        /* UI FIX: Increased touch target size for mobile to 44px */
+        .sheet-close-btn { background: #f1f5f9; border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; color: var(--text-sub); cursor: pointer; transition: transform 0.1s ease; }
+        .sheet-close-btn:active { transform: scale(0.92); opacity: 0.8; }
 
         .form-row { margin-bottom: 12px; }
         .form-row label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-sub); margin-bottom: 4px; }
@@ -148,8 +163,12 @@
         .form-input:focus, .form-select:focus { border-color: var(--accent); background: #ffffff; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         
-        .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .btn-danger-outline { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid #ef4444; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        /* UI FIX: Added click visual feedback */
+        .btn-action-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s ease; }
+        .btn-action-primary:active { transform: scale(0.97); opacity: 0.9; }
+        
+        .btn-danger-outline { width: 100%; padding: 12px; background: rgba(239, 68, 68, 0.05); color: #ef4444; border: 1px solid #ef4444; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s ease; }
+        .btn-danger-outline:active { transform: scale(0.97); opacity: 0.9; }
 
         /* ====== SETTINGS & SIDEBAR ====== */
         #settings-page { position: fixed; inset: 0; background: var(--bg-base); z-index: 5000; transform: translateX(100%); transition: transform 0.2s; display: flex; flex-direction: column; }
@@ -390,7 +409,7 @@
             line11: "11 KV लाइन", lineLT: "LT लाइन", dt3ph: "3-फेज DT", dt1ph: "1-फेज DT", totalCons: "उपभोक्ता",
             gssMgmt: "जीएसएस प्रबंधन", addNewGss: "नया GSS जोड़ें", manageFdr: "फीडर प्रबंधित करें", 
             export: "एक्सपोर्ट (डिवाइस में सेव करें)", exportPdf: "SLD PDF एक्सपोर्ट", exportDxf: "DXF एक्सपोर्ट", exportKml: "KML एक्सपोर्ट", exportCsv: "CSV एक्सपोर्ट", 
-            import: "इम्पोर्ट", importData: "ऐप डेटा इम्पोर्ट करें", system: "सिस्टम", settings: "सेटिंग्स", about: "ऐप के बारे में",
+            import: "इम्पोर्ट", importData: "ऐप डेटा इम्पोर्ट करें", system: "सिस्टम", settings: "सेटिंग्स", about: "ऐप के بارے में",
             appLanguage: "ऐप की भाषा", distUnit: "दूरी की इकाई", gpsInterval: "जीपीएस रीफ्रेश समय (सेकंड)", gpsAcc: "जीपीएस एक्यूरेसी लिमिट (मीटर)", resetData: "ऐप डेटा रीसेट करें",
             confirmLoc: "मैप सेंटर लोकेशन पक्की करें", confirmHere: "यहाँ सेट करें", cancel: "रद्द करें", setNewLoc: "नई लोकेशन सेट करें",
             toastSettings: "सेटिंग्स सेव हो गईं!", toastDel: "सफलतापूर्वक डिलीट हुआ!", toastImport: "सफलतापूर्वक इम्पोर्ट हुआ!",
@@ -549,7 +568,6 @@
         return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
     }
 
-    /* FIX 2: Strict prefix routing for precise lat/lng assignments preventing GSS/Pole ID clashes */
     function getNodeCoords(nodeId) { 
         const net = getActiveNetwork(); 
         const idStr = String(nodeId);
@@ -564,7 +582,6 @@
             if (d) return { lat: d.lat, lng: d.lng };
         }
 
-        // Fallback checks for legacy line formats
         const p = net.poles.find(x => String(x.poleNo) === idStr); if (p) return { lat: p.lat, lng: p.lng };
         const d = net.dts.find(x => String(x.code) === idStr); if (d) return { lat: d.lat, lng: d.lng };
         if (appState.gssNodes[idStr]) return { lat: appState.gssNodes[idStr].lat, lng: appState.gssNodes[idStr].lng };
@@ -648,14 +665,12 @@
         const net = getActiveNetwork();
         let results = [];
 
-        // Match Consumers
         net.consumers.forEach(c => {
             if (String(c.kno).toLowerCase().includes(query) || (c.name && c.name.toLowerCase().includes(query))) {
                 results.push({ type: 'CONSUMER', id: c.id, title: c.name, desc: `K-No: ${c.kno} | Connected to: ${c.parentRef}` });
             }
         });
 
-        // Match DTs
         net.dts.forEach(d => {
             if (String(d.code).toLowerCase().includes(query) || String(d.rating).includes(query) || (d.location && d.location.toLowerCase().includes(query))) {
                 results.push({ type: 'DT', id: d.id, title: `DT Code: ${d.code}`, desc: `Rating: ${d.rating} kVA | Loc: ${d.location || 'N/A'}` });
@@ -726,7 +741,6 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    /* FIX 1: Safely elevated Z-Index so they don't get trapped under Map Layers (OSM) */
     map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 450;
     map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 460;
     map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 470;
@@ -779,7 +793,6 @@
 
             const spanBuckets = {};
             net.lines.forEach(line => {
-                // FIX 1 & 2: Overriding coordinates every render guarantees snapping and visibility recovery
                 const c1 = getNodeCoords(line.fromNode); 
                 const c2 = getNodeCoords(line.toNode); 
                 if (c1 && c2) { 
@@ -1146,10 +1159,8 @@
         } else if (type === 'LINE') {
             if (net.poles.length === 0) return alert("Add at least one pole first!");
             
-            // FIX 3: Robust String casting for Pole IDs to prevent dropdown filtering mismatch
             const htNodes = net.poles.filter(p => p.lineType !== 'LT').map(p => ({id: String(p.poleNo), lat: p.lat, lng: p.lng}));
             
-            // FIX 2: Prefix GSS ID to distinguish it cleanly from Pole IDs
             const feederGss = appState.gssNodes[net.feeder.parentGss];
             if(feederGss) htNodes.push({id: 'GSS_'+feederGss.code, lat: feederGss.lat, lng: feederGss.lng});
             
@@ -1228,7 +1239,6 @@
         document.getElementById('inpConsParent').innerHTML = nodes.map(n => `<option value="${n.id}">${n.title} (${window.formatDistance(window.calcDistance(centerLat, centerLng, n.lat, n.lng))})</option>`).join('');
     }
 
-    /* FIX 3: Fixed Strict String matching in filterLineNodes and syncLineToSelect so Poles appear perfectly */
     window.filterLineNodes = function() {
         const type = document.getElementById('inpLineType').value; const net = getActiveNetwork();
         const fromSel = document.getElementById('inpFromNode'); const dtSelectorBox = document.getElementById('ltLineDTSelector');
@@ -1632,3 +1642,8 @@
 </script>
 </body>
 </html>
+
+
+Analyze code and kya smasya h batao line me, gss dt form me, aur kya bug h ui bug ke alawa pure app me kya dikkat hai logic me
+
+Aage ki planning karni h app ke bare me full professional offline first  banne ke liye jiska map offline load ho aur data sync ho sake database server se.
