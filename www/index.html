@@ -126,9 +126,13 @@
         
         .dt-square-icon { background: #f59e0b; color: white; border: 1.5px solid white; border-radius: 6px; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.4);}
         
-        .lt-pole-icon { background: #10b981; color: white; border: 2px solid white; border-radius: 50%; font-size: 10px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 22px; height: 22px;}
+        /* FIX 2: Visually reduced LT Pole CSS dimensions */
+        .lt-pole-icon { background: #10b981; color: white; border: 1.5px solid white; border-radius: 50%; font-size: 8px; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5); width: 18px; height: 18px;}
         
         .consumer-marker-icon { background: #3b82f6; color: white; border: 1.5px solid white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 9px; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.5);}
+        
+        /* FIX 4: Custom CSS for Live Location Emoji Marker */
+        .live-person-marker { background: rgba(255, 255, 255, 0.9); border: 2px solid #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 0 12px rgba(59, 130, 246, 0.6); }
         
         @keyframes redGlow { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.8); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
@@ -377,7 +381,7 @@
                 poles: [], dts: [], lines: [], consumers: [] 
             } 
         },
-        orphanPoleIds: new Set(), activeMove: null, placementType: null
+        orphanPoleIds: new Set(), activeMove: null, placementType: null, liveTrackId: null, liveMarker: null
     };
 
     let historyStack = [];
@@ -490,6 +494,50 @@
         triggerPersistence(); translateApp(); renderEntireNetwork(); showToast(i18n[appState.settings.language].toastSettings); 
     }
 
+    /* FIX 4: Complete Live Location Tracking Implementation */
+    window.toggleLiveTracking = function() {
+        const btn = document.getElementById('liveTrackBtn');
+        if (appState.liveTrackId) {
+            navigator.geolocation.clearWatch(appState.liveTrackId);
+            appState.liveTrackId = null;
+            btn.style.color = '#ef4444'; // Red (Off)
+            if (appState.liveMarker) {
+                map.removeLayer(appState.liveMarker);
+                appState.liveMarker = null;
+            }
+            showToast("Live tracking stopped");
+        } else {
+            btn.style.color = '#10b981'; // Green (On)
+            showToast("Live tracking started");
+            appState.liveTrackId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    if (!appState.liveMarker) {
+                        appState.liveMarker = L.marker([lat, lng], {
+                            icon: L.divIcon({
+                                className: 'live-person-marker',
+                                html: `🧍`,
+                                iconSize: [22, 22],
+                                iconAnchor: [11, 11]
+                            }),
+                            zIndexOffset: 1000 // Always clearly on top
+                        }).addTo(map);
+                        map.setView([lat, lng], 18);
+                    } else {
+                        appState.liveMarker.setLatLng([lat, lng]);
+                    }
+                },
+                (err) => { 
+                    showToast("GPS Error: " + err.message); 
+                    btn.style.color = '#ef4444';
+                    appState.liveTrackId = null;
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
+        }
+    };
+
     window.toggleSpeedDial = function(force) {
         const dial = document.getElementById('speed-dial-menu'), fab = document.getElementById('mainFabBtn');
         if (!dial || !fab) return; const isOpen = force !== undefined ? force : !dial.classList.contains('active');
@@ -552,13 +600,13 @@
         return nodes.slice().sort((a, b) => window.calcDistance(lat, lng, a.lat, a.lng) - window.calcDistance(lat, lng, b.lat, b.lng));
     }
 
+    /* FIX 3: Perfectly balanced line thickness scaling */
     function getLineSpec(type) {
         const t = (type || '').toUpperCase();
-        if (t.includes('LT')) return { name: 'LT LINE', color: '#10b981', weight: 2.5, dash: null, filterKey: 'linesLT' };
+        if (t.includes('LT')) return { name: 'LT LINE', color: '#10b981', weight: 2.2, dash: null, filterKey: 'linesLT' };
         return { name: '11 KV LINE', color: '#2563eb', weight: 3.5, dash: null, filterKey: 'lines11' };
     }
 
-    /* FIX 2: Strict Node Coordinate Resolution Logic */
     function getNodeCoords(nodeId) { 
         const net = getActiveNetwork(); 
         const idStr = String(nodeId);
@@ -578,7 +626,6 @@
             if (p) return { lat: p.lat, lng: p.lng };
         }
 
-        // Absolute Legacy Fallback
         const p = net.poles.find(x => String(x.poleNo) === idStr); if (p) return { lat: p.lat, lng: p.lng };
         const d = net.dts.find(x => String(x.code) === idStr); if (d) return { lat: d.lat, lng: d.lng };
         if (appState.gssNodes[idStr]) return { lat: appState.gssNodes[idStr].lat, lng: appState.gssNodes[idStr].lng };
@@ -589,14 +636,12 @@
         return null; 
     }
 
-    /* FIX 2: Bypassed offsetting completely to enforce absolute strict snapping to actual Node Coordinates under all zoom/rotate scenarios */
     function computeParallelOffset(coords, offsetMeters) {
         return coords; 
     }
 
     window.runOrphanNodeChecker = function() { updateOrphanStatus(); renderEntireNetwork(); showToast("Orphan Network Checked!"); }
 
-    /* FIX 3: Rewritten BFS to securely traverse prefixed string nodes. Immediately orphans disconnected Poles. */
     function updateOrphanStatus() {
         appState.orphanPoleIds.clear();
         const net = getActiveNetwork();
@@ -609,7 +654,6 @@
         net.poles.forEach(p => adj['POLE_' + p.poleNo] = []);
         net.dts.forEach(d => adj['DT_' + d.code] = []);
 
-        // DTs sit natively on HT Poles (Implicit connection)
         net.dts.forEach(d => {
             if(d.parentPole) {
                 const pId = 'POLE_' + d.parentPole;
@@ -619,7 +663,6 @@
             }
         });
 
-        // Explicit Lines Connections
         net.lines.forEach(l => {
             const u = String(l.fromNode);
             const v = String(l.toNode);
@@ -629,7 +672,6 @@
             adj[v].push(u);
         });
 
-        // BFS Engine
         const visited = new Set([gssId]);
         const queue = [gssId];
 
@@ -643,7 +685,6 @@
             });
         }
 
-        // Apply Orphan flags securely
         net.poles.forEach(p => {
             if (!visited.has('POLE_' + p.poleNo)) appState.orphanPoleIds.add(p.id);
         });
@@ -721,7 +762,6 @@
     }
 
     /* ====== MAP LAYER SETUP ====== */
-    /* FIX 2: preferCanvas FALSE rigorously prevents map rotation transform bugs for SVG polylines */
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false, 
@@ -744,12 +784,11 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    /* FIX 2: Eradicated strict line panes to let Leaflet's standard SVG engine process zoom/rotation without tearing line vectors apart */
     const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
 
     map.on('move', () => { const c = map.getCenter(); document.getElementById('reticle-coordinates').innerText = `${c.lat.toFixed(6)}, ${c.lng.toFixed(6)}`; });
     map.on('zoomend', () => renderEntireNetwork());
-    map.on('rotate', () => renderEntireNetwork()); // Firing natively to guarantee SVG lines clamp firmly on rotate
+    map.on('rotate', () => renderEntireNetwork());
 
     window.openFilterModal = function() {
         const f = appState.filters;
@@ -775,6 +814,12 @@
             const showConsumers = currentZoom >= 19 && f.consumers; const showLTPoles = currentZoom >= 17 && f.poles;
             const showDTs = currentZoom >= 16 && f.dts; const showHTPoles = currentZoom >= 15 && f.poles;
             const isGssMini = currentZoom < 13;
+
+            // FIX 1: Track HT Pole locations precisely to offset overlapping LT Poles
+            const htPoleMap = {};
+            net.poles.forEach(p => {
+                if(p.lineType !== 'LT') htPoleMap[`${p.lat.toFixed(5)}_${p.lng.toFixed(5)}`] = true;
+            });
 
             Object.values(appState.gssNodes).forEach(gss => {
                 if (typeof gss.lat === 'number') {
@@ -824,7 +869,21 @@
                     const iconClass = isLT ? 'lt-pole-icon' : 'pole-marker-icon';
                     let displayNo = p.poleNo; if (isLT && String(p.poleNo).includes('-')) displayNo = String(p.poleNo).split('-')[1];
 
-                    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ className: iconClass + (isOrphan ? ' orphan-pulse' : ''), html: `<span>${displayNo}</span>`, iconSize: [isLT?22:26, isLT?22:26], iconAnchor: [isLT?11:13, isLT?11:13] }) });
+                    // FIX 1 & FIX 2: Check for exact overlap and offset LT. Render strictly smaller LT icons dynamically
+                    let renderLat = p.lat, renderLng = p.lng;
+                    if(isLT && htPoleMap[`${p.lat.toFixed(5)}_${p.lng.toFixed(5)}`]) {
+                        renderLat -= 0.00004; // Visual push south-east to clear HT marker
+                        renderLng += 0.00004;
+                    }
+
+                    const m = L.marker([renderLat, renderLng], { 
+                        icon: L.divIcon({ 
+                            className: iconClass + (isOrphan ? ' orphan-pulse' : ''), 
+                            html: `<span>${displayNo}</span>`, 
+                            iconSize: [isLT?18:26, isLT?18:26], // FIX 2: Visibly smaller LT Pole Icon
+                            iconAnchor: [isLT?9:13, isLT?9:13] 
+                        }) 
+                    });
                     m.bindPopup(`<div style="padding:4px;"><b>Pole: ${p.poleNo} (${p.lineType || 'HT'})</b><p style="margin:4px 0; font-size:0.8rem;">Parent: ${p.dtCode || 'Feeder'}</p><div style="display:flex; gap:6px; margin-top:8px;"><button style="flex:1; padding:8px; background:#eff6ff; border:none; border-radius:6px;" onclick="window.openEditModal('pole','${p.id}')">Edit</button><button style="flex:1; padding:8px; background:#fef3c7; border:none; border-radius:6px;" onclick="window.startObjectMove('POLE','${p.id}','${p.poleNo}')">Move</button><button style="flex:1; padding:8px; background:#fee2e2; color:#dc2626; border:none; border-radius:6px;" onclick="window.deleteEntity('pole','${p.id}')">Delete</button></div></div>`);
                     featureGroups.poles.addLayer(m);
                 });
@@ -866,8 +925,10 @@
                     if (!parentCoord && gss) parentCoord = { lat: gss.lat, lng: gss.lng };
 
                     if (!c.lat || !c.lng) { c.lat = parentCoord.lat + 0.0001; c.lng = parentCoord.lng + 0.0001; }
+                    
+                    // FIX 3: Perfectly scaled Consumer Line Width (1.2) strictly thinner than LT Line
                     if (f.poles && currentZoom >= 16 && parentCoord) { 
-                        L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#000000', weight: 1.5, dashArray: '2,4', opacity: 0.7 }).addTo(featureGroups.consumerLines); 
+                        L.polyline([[parentCoord.lat, parentCoord.lng], [c.lat, c.lng]], { color: '#000000', weight: 1.2, dashArray: '2,4', opacity: 0.7 }).addTo(featureGroups.consumerLines); 
                     }
                     
                     if (appState.activeMove && appState.activeMove.id === c.id) return; 
@@ -985,33 +1046,26 @@
         document.getElementById('bottom-single-action').style.display = 'block';
     }
 
-    /* FIX 4: Complete rewriting of Deep Cascading Deletion logic */
     function deleteDTLogic(dtId, net) {
         const d = net.dts.find(x => x.id === dtId);
         if(!d) return;
 
-        // 1. Identify all child LT Poles
         const ltPolesToRemove = net.poles.filter(p => p.lineType === 'LT' && String(p.dtCode) === String(d.code));
         const ltPoleIds = ltPolesToRemove.map(p => String(p.poleNo));
         const ltPoleNodeIds = ltPoleIds.map(pn => 'POLE_' + pn);
 
-        // 2. Eradicate all lines connected to DT and all child LT Poles
         net.lines = net.lines.filter(l =>
             l.fromNode !== ('DT_' + d.code) && l.toNode !== ('DT_' + d.code) &&
             !ltPoleNodeIds.includes(String(l.fromNode)) && !ltPoleNodeIds.includes(String(l.toNode))
         );
 
-        // 3. Purge all consumers hooked strictly to the DT, or hooked to the doomed LT Poles
         net.consumers = net.consumers.filter(c => {
             const isDirectToDT = (c.parentType === 'DT' && String(c.parentRef) === String(d.code));
             const isOnRemovedLTPole = (c.parentType === 'POLE' && ltPoleIds.includes(String(c.parentRef)));
             return !(isDirectToDT || isOnRemovedLTPole);
         });
 
-        // 4. Exterminate the LT poles
         net.poles = net.poles.filter(p => !ltPoleIds.includes(String(p.poleNo)));
-
-        // 5. Exterminate the DT itself
         net.dts = net.dts.filter(x => x.id !== dtId);
     }
 
@@ -1038,10 +1092,8 @@
                 if (p.lineType === 'LT') {
                     deleteLTPoleLogic(p, net);
                 } else {
-                    // HT Pole
                     const dtsOnPole = net.dts.filter(d => String(d.parentPole) === String(p.poleNo));
                     dtsOnPole.forEach(dt => deleteDTLogic(dt.id, net));
-
                     net.lines = net.lines.filter(l => l.fromNode !== ('POLE_'+p.poleNo) && l.toNode !== ('POLE_'+p.poleNo));
                     net.poles = net.poles.filter(x => x.id !== id);
                 }
@@ -1054,7 +1106,6 @@
         map.closePopup(); const net = getActiveNetwork();
         if (type === 'pole') {
             const p = net.poles.find(x => x.id === id); if (!p) return;
-            /* FIX 1: Enforced disabled, read-only field for Pole Number Editing */
             openModal(`<div class="sheet-head"><div class="sheet-title">Edit Pole</div><button class="sheet-close-btn" onclick="window.closeModal()"><i class="fa-solid fa-xmark"></i></button></div>
                 <div class="form-row"><label>Pole Number (Locked)*</label><input type="text" id="editPoleNo" class="form-input" value="${p.poleNo}" readonly disabled style="background-color:#e2e8f0; cursor:not-allowed; opacity:0.8;"></div>
                 <button class="btn-action-primary" onclick="window.saveEditedPole('${p.id}')">Save Changes</button>`);
@@ -1073,7 +1124,6 @@
         }
     }
     
-    /* FIX 1: Ignored PoleNumber Input to enforce strict immutability */
     window.saveEditedPole = function(id) { saveSnapshot(); window.closeModal(); showToast("Pole Settings Updated"); }
     
     window.saveEditedDT = function(id) { saveSnapshot(); const net = getActiveNetwork(); const d = net.dts.find(x => x.id === id); if (!d) return; d.code = document.getElementById('editDTCode').value.trim(); d.location = document.getElementById('editDTLocation').value.trim(); window.closeModal(); renderEntireNetwork(); triggerPersistence(); showToast("Updated"); }
