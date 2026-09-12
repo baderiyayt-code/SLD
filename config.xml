@@ -1,39 +1,58 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="in.discom.feeder.survey" version="3.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
-    <name>DISCOM Survey Pro</name>
-    <description>DISCOM Feeder Survey Offline App with Smart Sync</description>
-    <author email="it@discom.in">DISCOM IT Team</author>
+<widget id="com.discom.surveypro" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    
+    <!-- App Details -->
+    <name>DISCOM Pro</name>
+    <description>Enterprise GIS Field Survey Application for DISCOM</description>
+    <author email="support@discom.com" href="https://discom.com">
+        DISCOM Dev Team
+    </author>
     
     <content src="index.html" />
     
+    <!-- Network & Security Settings -->
     <access origin="*" />
-    <allow-navigation href="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
-
-    <!-- ====== APP ICON & SPLASH SCREEN ====== -->
+    <allow-intent href="tel:*" />
+    <allow-intent href="sms:*" />
+    <allow-intent href="mailto:*" />
+    <allow-intent href="geo:*" />
+    
+    <!-- ========================================== -->
+    <!-- APP LOGO / ICON CONFIGURATION              -->
+    <!-- ========================================== -->
+    <!-- Default Icon -->
     <icon src="res/icon.png" />
-    <preference name="ShowSplashScreenSpinner" value="false" />
-    <preference name="SplashMaintainAspectRatio" value="true" />
-    <preference name="FadeSplashScreenDuration" value="500"/>
-    <preference name="SplashScreenDelay" value="2000"/>
-
-    <preference name="android-minSdkVersion" value="22" />
-    <preference name="android-targetSdkVersion" value="33" />
-    <preference name="AndroidPersistentFileLocation" value="Internal" />
-
+    
+    <!-- Android Platform Settings -->
     <platform name="android">
-        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
-            <application android:requestLegacyExternalStorage="true" />
-        </edit-config>
-        <config-file target="AndroidManifest.xml" parent="/*">
-            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-        </config-file>
+        <allow-intent href="market:*" />
+        
+        <!-- API Level Preferences -->
+        <preference name="android-minSdkVersion" value="24" />
+        <preference name="android-targetSdkVersion" value="33" />
+        <preference name="AndroidXEnabled" value="true" />
+        
+        <!-- Android Specific Icons for all screen sizes -->
+        <icon src="res/icon.png" density="ldpi" />
+        <icon src="res/icon.png" density="mdpi" />
+        <icon src="res/icon.png" density="hdpi" />
+        <icon src="res/icon.png" density="xhdpi" />
+        <icon src="res/icon.png" density="xxhdpi" />
+        <icon src="res/icon.png" density="xxxhdpi" />
+    </platform>
+    
+    <!-- iOS Platform Settings (Optional) -->
+    <platform name="ios">
+        <allow-intent href="itms:*" />
+        <allow-intent href="itms-apps:*" />
     </platform>
 
-    <plugin name="cordova-plugin-file" spec="^8.0.0" />
-    <plugin name="cordova-plugin-geolocation" spec="^5.0.0" />
-    <plugin name="cordova-plugin-network-information" spec="^3.0.0" />
-    <plugin name="cordova-sqlite-storage" spec="^6.0.0" />
+    <!-- General App UI Preferences -->
+    <preference name="DisallowOverscroll" value="true" />
+    <preference name="Orientation" value="default" />
+    <preference name="Fullscreen" value="false" />
+    <preference name="ShowSplashScreenSpinner" value="false" />
+
 </widget>
