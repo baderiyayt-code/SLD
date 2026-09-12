@@ -59,7 +59,8 @@
         .action-btn-sm.bg { background: #f1f5f9; color: var(--text-main); font-size: 1rem; }
 
         /* ====== SEARCH BAR ====== */
-        .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; }
+        /* FIX 2: Added z-index: 10 here to overlay above the KPI bar */
+        .search-box { background: var(--bg-glass); backdrop-filter: blur(16px); padding: 8px 12px; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); pointer-events: auto; display: flex; align-items: center; gap: 8px; position: relative; z-index: 10; }
         .search-input { border: none; background: transparent; width: 100%; outline: none; font-size: 0.9rem; font-weight: 600; color: var(--text-main); }
         .suggestions-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-sheet); border-radius: var(--radius-md); border: 1px solid var(--border); box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto; display: none; z-index: 2000; }
         .suggestions-panel.active { display: flex; flex-direction: column; }
@@ -204,7 +205,7 @@
             <div id="searchSuggestions" class="suggestions-panel"></div>
         </div>
 
-        <!-- KPI BAR (NOW 5 ITEMS) -->
+        <!-- KPI BAR (5 items) -->
         <div class="kpi-row">
             <div class="kpi-tile"><div class="kpi-label" data-i18n="line11">11 KV Line</div><div class="kpi-val" id="kpi11">0 M</div></div>
             <div class="kpi-tile"><div class="kpi-label" data-i18n="lineLT">LT Line</div><div class="kpi-val" id="kpiLT">0 M</div></div>
@@ -688,7 +689,6 @@
     }
 
     /* ====== MAP LAYER SETUP ====== */
-    // Map Rotation Fix: ensure bearing: 0 is explicitly defined for proper plugin initialization
     const map = L.map('map', { 
         zoomControl: false, 
         attributionControl: false, 
@@ -711,14 +711,15 @@
         tileLayers[layerKeys[currentTileIndex]].layer.addTo(map); document.getElementById('layer-indicator').innerText = tileLayers[layerKeys[currentTileIndex]].name;
     }
 
-    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 200;
-    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 250;
-    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 260;
-    map.createPane('gssPane'); map.getPane('gssPane').style.zIndex = 400;
-    map.createPane('htPolePane'); map.getPane('htPolePane').style.zIndex = 450;
-    map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 460;
-    map.createPane('dtPane'); map.getPane('dtPane').style.zIndex = 650;
-    map.createPane('consumerPane'); map.getPane('consumerPane').style.zIndex = 700;
+    /* FIX 1: Layer Index Corrected. Lines are 410+, Marker/Assets are 500+ */
+    map.createPane('bgLinesPane'); map.getPane('bgLinesPane').style.zIndex = 410;
+    map.createPane('htLinePane'); map.getPane('htLinePane').style.zIndex = 420;
+    map.createPane('ltLinePane'); map.getPane('ltLinePane').style.zIndex = 430;
+    map.createPane('gssPane'); map.getPane('gssPane').style.zIndex = 500;
+    map.createPane('htPolePane'); map.getPane('htPolePane').style.zIndex = 510;
+    map.createPane('ltPolePane'); map.getPane('ltPolePane').style.zIndex = 520;
+    map.createPane('dtPane'); map.getPane('dtPane').style.zIndex = 600;
+    map.createPane('consumerPane'); map.getPane('consumerPane').style.zIndex = 610;
 
     const featureGroups = { gss: L.layerGroup().addTo(map), lines: L.layerGroup().addTo(map), poles: L.layerGroup().addTo(map), dts: L.layerGroup().addTo(map), consumers: L.layerGroup().addTo(map), consumerLines: L.layerGroup().addTo(map) };
 
@@ -802,7 +803,6 @@
 
             if (f.dts && showDTs) {
                 const dtCoordMap = {};
-                // Pre-process for symmetric overlapping
                 net.dts.forEach(d => {
                     if (!d.lat || !d.lng) { const p = net.poles.find(x => x.poleNo == d.parentPole); if (p) { d.lat = p.lat; d.lng = p.lng; } }
                     if (d.lat && d.lng) {
@@ -816,7 +816,6 @@
                     const totalDTs = dtsAtCoord.length;
                     dtsAtCoord.forEach((d, idx) => {
                         const isOrphan = appState.orphanPoleIds.has(d.id);
-                        // Math logic for symmetrical offset so they don't drift asymmetrically 
                         const offsetFactor = (idx - (totalDTs - 1) / 2);
                         const dLatOffset = d.lat + (offsetFactor * 0.00006);
                         const dLngOffset = d.lng + (offsetFactor * 0.00006);
@@ -1558,10 +1557,13 @@
             ctx.fillStyle = "#000000"; ctx.font = "bold 24px Arial"; ctx.fillText(feederGss.name, gx, gy-40);
         }
 
+        /* FIX 3: Removed (commented out) the pole drawing loop for SLD PDFs */
+        /*
         htPoles.forEach(p => { 
             const dx = toX(p.lng), dy = toY(p.lat); 
             ctx.beginPath(); ctx.arc(dx, dy, 10, 0, 2 * Math.PI); ctx.fillStyle = "#fde047"; ctx.fill(); ctx.stroke(); 
         });
+        */
 
         net.dts.forEach(d => {
             const dtx = toX(d.lng), dty = toY(d.lat);
